@@ -9,15 +9,12 @@ import net.corda.core.identity.Party;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
 import net.corda.core.contracts.Command;
-import net.corda.core.identity.Party;
-import net.corda.core.flows.ReceiveFinalityFlow;
 import net.corda.core.utilities.ProgressTracker;
 import net.corda.core.contracts.UniqueIdentifier;
 
 import java.util.UUID;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import java.security.PublicKey;
 
@@ -79,10 +76,10 @@ public class CreateGameFlow extends FlowLogic<UniqueIdentifier> {
 // We create the transaction components.
         progressTracker.setCurrentStep(GENERATING_TRANSACTION);
 
-        GameState outputState = new GameState(move, getOurIdentity(), otherParty, 0, 0, new UniqueIdentifier(null, UUID.randomUUID()));
+        GameState outputState = new GameState(getOurIdentity(), otherParty, 0, 0, new UniqueIdentifier(null, UUID.randomUUID()), move, null);
         List<PublicKey> requiredSigners = Arrays.asList(getOurIdentity().getOwningKey(), otherParty.getOwningKey());
 
-        Command command = new Command<>(new GameContract.Create(), requiredSigners);
+        Command command = new Command<>(new GameContract.Commands.Create(), requiredSigners);
 
 // We create a transaction builder and add the components.
         TransactionBuilder txBuilder = new TransactionBuilder(notary)

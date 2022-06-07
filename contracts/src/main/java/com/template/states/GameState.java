@@ -5,14 +5,8 @@ import net.corda.core.contracts.BelongsToContract;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.Party;
-
-import net.corda.core.contracts.LinearState;
 import net.corda.core.contracts.UniqueIdentifier;
 import org.jetbrains.annotations.NotNull;
-import net.corda.core.identity.AnonymousParty;
-import net.corda.core.serialization.ConstructorForDeserialization;
-import net.corda.core.serialization.CordaSerializable;
-
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,24 +14,30 @@ import java.util.List;
 
 @BelongsToContract(GameContract.class)
 public class GameState implements ContractState {
-    private String move;
     private final Party player1;
     private final Party player2;
     private int player1score;
     private int player2score;
     private UniqueIdentifier linearId;
+    private String firstMove;
+    private String secondMove;
 
-    public GameState(String move, Party player1, Party player2, int player1score, int player2score, UniqueIdentifier linearId) {
-        this.move = move;
+    public GameState(Party player1, Party player2, int player1score, int player2score, UniqueIdentifier linearId, String firstMove, String secondMove) {
         this.player1 = player1;
         this.player2 = player2;
         this.player1score = player1score;
         this.player2score = player2score;
         this.linearId = linearId;
+        this.firstMove = firstMove;
+        this.secondMove = secondMove;
     }
 
-    public String getMove() {
-        return move;
+    public String getFirstMove() {
+        return firstMove;
+    }
+
+    public String getSecondMove() {
+        return secondMove;
     }
 
     public Party getPlayer1() {

@@ -22,13 +22,13 @@ import static net.corda.core.contracts.ContractsDSL.requireThat;
 
 
 
-@InitiatedBy(QueryVaultFlow.class)
-class QueryVaultFlowResponder extends FlowLogic<Void> {
+@InitiatedBy(PickTurnFlow.class)
+class PickTurnFlowResponder extends FlowLogic<Void> {
     //private variable
     private FlowSession counterpartySession;
 
     //Constructor
-    public QueryVaultFlowResponder(FlowSession counterpartySession) {
+    public PickTurnFlowResponder(FlowSession counterpartySession) {
         this.counterpartySession = counterpartySession;
     }
 
