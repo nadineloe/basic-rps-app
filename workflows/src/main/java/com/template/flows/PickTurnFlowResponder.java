@@ -22,13 +22,13 @@ import static net.corda.core.contracts.ContractsDSL.requireThat;
 
 
 
-@InitiatedBy(CreateGameFlow.class)
-class CreateGameFlowResponder extends FlowLogic<Void> {
+@InitiatedBy(QueryVaultFlow.class)
+class QueryVaultFlowResponder extends FlowLogic<Void> {
     //private variable
     private FlowSession counterpartySession;
 
     //Constructor
-    public CreateGameFlowResponder(FlowSession counterpartySession) {
+    public QueryVaultFlowResponder(FlowSession counterpartySession) {
         this.counterpartySession = counterpartySession;
     }
 
@@ -38,13 +38,7 @@ class CreateGameFlowResponder extends FlowLogic<Void> {
         subFlow(new SignTransactionFlow(counterpartySession) {
             @Override
             protected void checkTransaction(@NotNull SignedTransaction stx) throws FlowException {
-//                requireThat(require -> {
-//                    ContractState output = stx.getTx().getOutputs().get(0).getData();
-//                    GameState game = (GameState) output;
-//                    require.using("The inputs value cannot be over 3.", game.getMove() < 4);
-//                    return subFlow(new ReceiveFinalityFlow(otherPartySession));
-////                    return null;
-//                }
+
             }
         });
         subFlow(new ReceiveFinalityFlow(counterpartySession));

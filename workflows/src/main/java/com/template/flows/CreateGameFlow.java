@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 import java.security.PublicKey;
 
 
-
 @InitiatingFlow
 @StartableByRPC
 public class CreateGameFlow extends FlowLogic<UniqueIdentifier> {
@@ -55,11 +54,11 @@ public class CreateGameFlow extends FlowLogic<UniqueIdentifier> {
     }
 
     //private variables
-    private final int move;
+    private final String move;
     private final Party otherParty;
 
     //public constructor
-    public CreateGameFlow(int move, Party otherParty) {
+    public CreateGameFlow(String move, Party otherParty) {
         this.move = move;
         this.otherParty = otherParty;
 //        this.round = round;
@@ -72,15 +71,17 @@ public class CreateGameFlow extends FlowLogic<UniqueIdentifier> {
     @Suspendable
     @Override
     public UniqueIdentifier call() throws FlowException {
+            
 // We retrieve the notary identity from the network map.
-        Party notary = getServiceHub().getNetworkMapCache().getNotaryIdentities().get(0);
-
+        // Explicit selection of notary by CordaX500Name - argument can by coded in flows or parsed from config (Preferred)*/
+        final Party notary = getServiceHub().getNetworkMapCache().getNotary(CordaX500Name.parse("O=Notary,L=London,C=GB"));
 
 // We create the transaction components.
         progressTracker.setCurrentStep(GENERATING_TRANSACTION);
 
         GameState outputState = new GameState(move, getOurIdentity(), otherParty, 0, 0, new UniqueIdentifier(null, UUID.randomUUID()));
         List<PublicKey> requiredSigners = Arrays.asList(getOurIdentity().getOwningKey(), otherParty.getOwningKey());
+
         Command command = new Command<>(new GameContract.Create(), requiredSigners);
 
 // We create a transaction builder and add the components.

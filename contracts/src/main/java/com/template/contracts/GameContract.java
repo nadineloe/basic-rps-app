@@ -32,16 +32,16 @@ public class GameContract implements Contract {
 
         // Constraints on the shape of the transaction.
         if (!tx.getInputs().isEmpty())
-            throw new IllegalArgumentException("No inputs should be consumed when issuing an IOU.");
+            throw new IllegalArgumentException("No inputs should be consumed when issuing a new GameState.");
         if (!(tx.getOutputs().size() == 1))
-            throw new IllegalArgumentException("There should be one output state of type IOUState.");
+            throw new IllegalArgumentException("There should be one output state of type GameState.");
 
         // Game-specific constraints.
         final GameState output = tx.outputsOfType(GameState.class).get(0);
         final Party player1 = output.getPlayer1();
         final Party player2 = output.getPlayer2();
-        if (output.getMove() <= 0)
-            throw new IllegalArgumentException("The Game's value must be non-negative.");
+//        if (output.getMove() <= 0)
+//            throw new IllegalArgumentException("The Game's value must be non-negative.");
         if (player1.equals(player2))
             throw new IllegalArgumentException("The player1 and the player2 cannot be the same entity.");
 

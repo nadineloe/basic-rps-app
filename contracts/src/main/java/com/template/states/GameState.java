@@ -20,14 +20,14 @@ import java.util.List;
 
 @BelongsToContract(GameContract.class)
 public class GameState implements ContractState {
-    private int move;
+    private String move;
     private final Party player1;
     private final Party player2;
     private int player1score;
     private int player2score;
     private UniqueIdentifier linearId;
 
-    public GameState(int move, Party player1, Party player2, int player1score, int player2score, UniqueIdentifier linearId) {
+    public GameState(String move, Party player1, Party player2, int player1score, int player2score, UniqueIdentifier linearId) {
         this.move = move;
         this.player1 = player1;
         this.player2 = player2;
@@ -36,7 +36,7 @@ public class GameState implements ContractState {
         this.linearId = linearId;
     }
 
-    public int getMove() {
+    public String getMove() {
         return move;
     }
 
@@ -59,4 +59,15 @@ public class GameState implements ContractState {
 
     @NotNull
     public UniqueIdentifier getLinearId() { return this.linearId; }
+
+//    public GameState returnNewScoreAfterRound(Party player1, Party player2){
+//        GameState newGameState = new GameState(this.player1, this.player2, me, competitor, false, this.linearId, 0, 0, "Rock", Status.GAME_IN_PROGRESS);
+//        return newGameState;
+//        if(player1Score >= 3 || player2Score >= 3){
+//            GameState newGameState = new GameState(this.player1, this.player2, me, competitor, !this.isPlayer1Turn, this.linearId, player1Score, player2Score, Status.GAME_OVER);
+//            return newGameState;
+//        } else {
+//            GameState newGameState = new GameState(this.player1, this.player2, me, competitor, this.isPlayer1Turn, this.linearId, player1Score, player2Score , Status.GAME_IN_PROGRESS);
+//            return newGameState;
+//        }
 }
