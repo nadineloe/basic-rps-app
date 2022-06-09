@@ -1,9 +1,9 @@
-package com.template.flows;
+package com.rps.flows;
 
 import co.paralleluniverse.fibers.Suspendable;
 import net.corda.core.contracts.ContractState;
-import com.template.contracts.GameContract;
-import com.template.states.GameState;
+import com.rps.contracts.GameContract;
+import com.rps.states.GameState;
 import net.corda.core.flows.*;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;

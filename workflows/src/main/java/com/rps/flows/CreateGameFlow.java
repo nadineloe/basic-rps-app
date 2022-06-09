@@ -1,8 +1,8 @@
-package com.template.flows;
+package com.rps.flows;
 
 import co.paralleluniverse.fibers.Suspendable;
-import com.template.contracts.GameContract;
-import com.template.states.GameState;
+import com.rps.contracts.GameContract;
+import com.rps.states.GameState;
 import net.corda.core.flows.*;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
@@ -72,14 +72,15 @@ public class CreateGameFlow extends FlowLogic<UniqueIdentifier> {
 // We retrieve the notary identity from the network map.
         // Explicit selection of notary by CordaX500Name - argument can by coded in flows or parsed from config (Preferred)*/
         final Party notary = getServiceHub().getNetworkMapCache().getNotary(CordaX500Name.parse("O=Notary,L=London,C=GB"));
+//        getServiceHub().getNetworkMapCache().getNotaryIdentities().get(0)
 
 // We create the transaction components.
         progressTracker.setCurrentStep(GENERATING_TRANSACTION);
-
+//        GameState test = new GameState(getOurIdentity(), otherParty);
         GameState outputState = new GameState(getOurIdentity(), otherParty, 0, 0, new UniqueIdentifier(null, UUID.randomUUID()), move, null);
         List<PublicKey> requiredSigners = Arrays.asList(getOurIdentity().getOwningKey(), otherParty.getOwningKey());
 
-        Command command = new Command<>(new GameContract.Commands.Create(), requiredSigners);
+        Command command = new Command(new GameContract.Commands.Create(), requiredSigners);
 
 // We create a transaction builder and add the components.
         TransactionBuilder txBuilder = new TransactionBuilder(notary)

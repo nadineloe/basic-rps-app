@@ -1,4 +1,4 @@
-package com.template.webserver;
+package com.rps.webserver;
 
 import net.corda.core.messaging.CordaRPCOps;
 import org.slf4j.Logger;
@@ -20,8 +20,8 @@ public class Controller {
         this.proxy = rpc.proxy;
     }
 
-    @GetMapping(value = "/templateendpoint", produces = "text/plain")
-    private String templateendpoint() {
+    @GetMapping(value = "/rpsendpoint", produces = "text/plain")
+    private String rpsendpoint() {
         return "Define an endpoint here.";
     }
 }

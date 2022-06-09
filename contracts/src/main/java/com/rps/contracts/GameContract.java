@@ -1,6 +1,6 @@
-package com.template.contracts;
+package com.rps.contracts;
 
-import com.template.states.GameState;
+import com.rps.states.GameState;
 import net.corda.core.contracts.CommandData;
 import net.corda.core.contracts.Contract;
 import net.corda.core.transactions.LedgerTransaction;
@@ -10,7 +10,7 @@ import net.corda.core.transactions.LedgerTransaction;
 // ************
 
 public class GameContract implements Contract {
-    public static final String ID = "com.template.contracts.GameContract";
+    public static final String ID = "com.rps.contracts.GameContract";
 
     @Override
     public void verify(LedgerTransaction tx) throws IllegalArgumentException {
@@ -57,7 +57,7 @@ public class GameContract implements Contract {
 
 
 // public class GameContract implements Contract {
-//     public static final String ID = "com.template.contracts.GameContract";
+//     public static final String ID = "com.rps.contracts.GameContract";
 
 //     // Our Create command.
 //     public static class Create implements CommandData {}

@@ -1,4 +1,4 @@
-package com.template;
+package com.rps;
 
 import net.corda.client.rpc.CordaRPCClient;
 import net.corda.client.rpc.CordaRPCConnection;

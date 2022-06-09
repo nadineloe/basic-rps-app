@@ -1,6 +1,6 @@
-package com.template.states;
+package com.rps.states;
 
-import com.template.contracts.GameContract;
+import com.rps.contracts.GameContract;
 import net.corda.core.contracts.BelongsToContract;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.identity.AbstractParty;
@@ -10,17 +10,23 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 
 @BelongsToContract(GameContract.class)
 public class GameState implements ContractState {
     private final Party player1;
     private final Party player2;
-    private int player1score;
-    private int player2score;
-    private UniqueIdentifier linearId;
-    private String firstMove;
-    private String secondMove;
+    private int player1score = 0;
+    private int player2score = 0;
+    private UniqueIdentifier linearId = UniqueIdentifier.Companion.fromString(UUID.randomUUID().toString());
+    private String firstMove = null;
+    private String secondMove = null;
+
+    public GameState(Party player1, Party player2) {
+        this.player1 = player1;
+        this.player2 = player2;
+    }
 
     public GameState(Party player1, Party player2, int player1score, int player2score, UniqueIdentifier linearId, String firstMove, String secondMove) {
         this.player1 = player1;

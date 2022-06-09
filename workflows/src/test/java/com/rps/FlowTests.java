@@ -1,8 +1,8 @@
-package com.template;
+package com.rps;
 
 import com.google.common.collect.ImmutableList;
-import com.template.flows.TemplateFlow;
-import com.template.states.TemplateState;
+import com.rps.flows.CreateGameFlow;
+import com.rps.states.GameState;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.node.services.Vault;
 import net.corda.core.node.services.vault.QueryCriteria;
@@ -22,8 +22,8 @@ public class FlowTests {
     @Before
     public void setup() {
         network = new MockNetwork(new MockNetworkParameters().withCordappsForAllNodes(ImmutableList.of(
-                TestCordapp.findCordapp("com.template.contracts"),
-                TestCordapp.findCordapp("com.template.flows")))
+                TestCordapp.findCordapp("com.rps.contracts"),
+                TestCordapp.findCordapp("com.rps.flows")))
                 .withNotarySpecs(ImmutableList.of(new MockNetworkNotarySpec(CordaX500Name.parse("O=Notary,L=London,C=GB")))));
         a = network.createPartyNode(null);
         b = network.createPartyNode(null);
@@ -37,13 +37,13 @@ public class FlowTests {
 
     @Test
     public void dummyTest() {
-        TemplateFlow.TemplateFlowInitiator flow = new TemplateFlow.TemplateFlowInitiator(b.getInfo().getLegalIdentities().get(0));
+        rpsFlow.rpsFlowInitiator flow = new rpsFlow.rpsFlowInitiator(b.getInfo().getLegalIdentities().get(0));
         Future<SignedTransaction> future = a.startFlow(flow);
         network.runNetwork();
 
         //successful query means the state is stored at node b's vault. Flow went through.
         QueryCriteria inputCriteria = new QueryCriteria.VaultQueryCriteria().withStatus(Vault.StateStatus.UNCONSUMED);
-        TemplateState state = b.getServices().getVaultService().queryBy(TemplateState.class,inputCriteria)
+        rpsState state = b.getServices().getVaultService().queryBy(rpsState.class,inputCriteria)
                 .getStates().get(0).getState().getData();
     }
 }

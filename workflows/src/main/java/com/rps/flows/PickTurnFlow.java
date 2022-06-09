@@ -1,8 +1,8 @@
-package com.template.flows;
+package com.rps.flows;
 
 import co.paralleluniverse.fibers.Suspendable;
-import com.template.contracts.GameContract;
-import com.template.states.GameState;
+import com.rps.contracts.GameContract;
+import com.rps.states.GameState;
 import net.corda.core.flows.*;
 import net.corda.core.identity.Party;
 import net.corda.core.transactions.SignedTransaction;
