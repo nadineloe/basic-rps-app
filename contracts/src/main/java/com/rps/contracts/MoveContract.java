@@ -9,7 +9,7 @@ import net.corda.core.transactions.LedgerTransaction;
 // * Contract *
 // ************
 
-public class GameContract implements Contract {
+public class MoveContract implements Contract {
     public static final String ID = "com.rps.contracts.GameContract";
 
     @Override
@@ -17,6 +17,7 @@ public class GameContract implements Contract {
         // Contract verification logic should be implemented here
         if(tx.getCommands().size() != 1)
             throw new IllegalArgumentException("One command Expected");
+
     }
 
     private void verifyCreate(LedgerTransaction tx) throws IllegalArgumentException{
@@ -26,6 +27,8 @@ public class GameContract implements Contract {
 
         if(!(tx.getOutput(0) instanceof GameState))
             throw new IllegalArgumentException("Output of type GameState expected");
+
+
     }
 
     private void verifyPlay(LedgerTransaction tx) throws IllegalArgumentException {
@@ -33,14 +36,13 @@ public class GameContract implements Contract {
 
         if(tx.getOutputStates().size() != 1 || tx.getInputStates().size() != 1)
             throw new IllegalArgumentException("One Input and One Output Expected");
+
     }
 
     // Used to indicate the transaction's intent.
     public interface Commands extends CommandData {
         //In our hello-world app, We will only have one command.
-        class Create implements Commands {}
         class SubmitTurn implements Commands {}
-        class EndGame implements Commands {}
     }
 }
 

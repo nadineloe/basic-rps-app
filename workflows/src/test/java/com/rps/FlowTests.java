@@ -1,9 +1,14 @@
 package com.rps;
 
 import com.google.common.collect.ImmutableList;
-import com.rps.flows.CreateGameFlow;
+import com.rps.flows.*;
 import com.rps.states.GameState;
+import com.rps.states.MoveState;
+import net.corda.core.contracts.UniqueIdentifier;
+import net.corda.core.flows.FlowException;
+import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.CordaX500Name;
+import net.corda.core.identity.Party;
 import net.corda.core.node.services.Vault;
 import net.corda.core.node.services.vault.QueryCriteria;
 import net.corda.core.transactions.SignedTransaction;
@@ -12,12 +17,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 public class FlowTests {
     private MockNetwork network;
     private StartedMockNode a;
     private StartedMockNode b;
+    private AbstractParty player1;
+    private AbstractParty player2;
+    private List<AbstractParty> players;
 
     @Before
     public void setup() {
@@ -27,6 +38,9 @@ public class FlowTests {
                 .withNotarySpecs(ImmutableList.of(new MockNetworkNotarySpec(CordaX500Name.parse("O=Notary,L=London,C=GB")))));
         a = network.createPartyNode(null);
         b = network.createPartyNode(null);
+        player1 = a.getInfo().getLegalIdentities().get(0);
+        player2 = b.getInfo().getLegalIdentities().get(0);
+        players = Arrays.asList(player1, player2);
         network.runNetwork();
     }
 
@@ -36,14 +50,54 @@ public class FlowTests {
     }
 
     @Test
-    public void dummyTest() {
-        rpsFlow.rpsFlowInitiator flow = new rpsFlow.rpsFlowInitiator(b.getInfo().getLegalIdentities().get(0));
-        Future<SignedTransaction> future = a.startFlow(flow);
+    public void checkIfGameStateExists() {
+        GameState testState = new GameState(players);
+        a.startFlow(new CreateGameFlow.Initiator(player2));
+        network.runNetwork();
+        Vault.Page<GameState> newTestState = a.getServices().getVaultService().queryBy(GameState.class);
+        assert newTestState.getTotalStatesAvailable() == 1;
+    }
+
+    @Test
+    public void checkIfCreateGameFlowExists() {
+        CreateGameFlow.Initiator flow = new CreateGameFlow.Initiator(player2);
+        Future<UniqueIdentifier> future = a.startFlow(flow);
         network.runNetwork();
 
         //successful query means the state is stored at node b's vault. Flow went through.
         QueryCriteria inputCriteria = new QueryCriteria.VaultQueryCriteria().withStatus(Vault.StateStatus.UNCONSUMED);
-        rpsState state = b.getServices().getVaultService().queryBy(rpsState.class,inputCriteria)
+        GameState state = b.getServices().getVaultService().queryBy(GameState.class, inputCriteria)
                 .getStates().get(0).getState().getData();
     }
+
+    @Test
+    public void checkIfMsgIsBoolean() throws FlowException, ExecutionException, InterruptedException {
+        CreateGameFlow.Initiator createGameFlow = new CreateGameFlow.Initiator(player2);
+        Future<UniqueIdentifier> createGameFuture = a.startFlow(createGameFlow);
+        network.runNetwork();
+        UniqueIdentifier gameId = createGameFuture.get();
+
+//        GameState gameState = (GameState) a.getServices().cordaService(GameService.class).getGameStateAndRefByPlayer(player2).getState().getData();
+//        UniqueIdentifier gameId = gameState.getLinearId();
+
+        AskOtherPartyFlow.Initiator askOtherPartyFlow = new AskOtherPartyFlow.Initiator(gameId);
+        Future<Boolean> hasPlayerGoneFuture = a.startFlow(askOtherPartyFlow);
+        network.runNetwork();
+    }
+
+//    @Test
+//    public void checkIfPickTurnFlowExists() {
+//        CreateGameFlow.Initiator flow = new CreateGameFlow.Initiator(player2);
+//        Future<UniqueIdentifier> future = a.startFlow(flow);
+//        network.runNetwork();
+//
+//        PickTurnFlow.Initiator flow = new PickTurnFlow.Initiator(gameId);
+//        Future<SignedTransaction> future = a.startFlow(flow);
+//        network.runNetwork();
+//
+//        //successful query means the state is stored at node b's vault. Flow went through.
+//        QueryCriteria inputCriteria = new QueryCriteria.VaultQueryCriteria().withStatus(Vault.StateStatus.UNCONSUMED);
+//        GameState state = b.getServices().getVaultService().queryBy(GameState.class, inputCriteria)
+//                .getStates().get(0).getState().getData();
+//    }
 }
