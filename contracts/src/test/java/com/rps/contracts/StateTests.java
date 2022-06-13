@@ -1,9 +1,12 @@
 package com.rps.contracts;
 
 import com.rps.states.GameState;
+import net.corda.core.contracts.UniqueIdentifier;
+import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.Party;
 import org.junit.Test;
 import java.lang.reflect.Field;
+import java.util.List;
 
 public class StateTests {
 
@@ -22,13 +25,13 @@ public class StateTests {
 
     @Test
     public void gameStateStateHasFieldOfCorrectType() throws NoSuchFieldException {
-        GameState.class.getDeclaredField("player1");
-        assert (GameState.class.getDeclaredField("player1").getType().equals(Party.class));
+        GameState.class.getDeclaredField("maxRounds");
+        assert (GameState.class.getDeclaredField("maxRounds").getType().equals(Integer.class));
 
-        GameState.class.getDeclaredField("player2");
-        assert (GameState.class.getDeclaredField("player2").getType().equals(Party.class));
+        GameState.class.getDeclaredField("players");
+        assert (GameState.class.getDeclaredField("players").getType().equals(AbstractParty.class));
 
-        GameState.class.getDeclaredField("firstMove");
-        assert (GameState.class.getDeclaredField("firstMove").getType().equals(String.class));
+        GameState.class.getDeclaredField("roundWinners");
+        assert (GameState.class.getDeclaredField("roundWinners").getType().equals(AbstractParty.class));
     }
 }

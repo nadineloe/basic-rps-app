@@ -35,7 +35,6 @@ public class PickTurnFlow extends FlowLogic<SignedTransaction> {
         StateAndRef gameInputStateAndRef = getServiceHub().cordaService(GameService.class).getGameStateAndRef(gameId);
         GameState gameInput = (GameState) gameInputStateAndRef.getState().getData();
 
-        List<AbstractParty> players = gameInput.getParticipants();
         List<PublicKey> requiredSigners = (List<PublicKey>) getOurIdentity().getOwningKey();
 
         Command command = new Command(new MoveContract.Commands.SubmitTurn(), requiredSigners);

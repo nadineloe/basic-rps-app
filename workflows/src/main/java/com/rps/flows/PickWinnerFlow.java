@@ -45,18 +45,19 @@ public class PickWinnerFlow {
             String player1move = moveInput.getMove();
 
 
+
     //        if (player1move == player2move) {
     //               throw new FlowException("Tie. Need another round to determine winner.");
     //           } else if (player1move == null) {
     //               throw new FlowException("Player 2 hasn't taken his turn yet.");
     //           } else if (player1move.equals("ROCK") && player2move.equals("SCISSORS")) {
-    //               i = player1score++;
+    //               return player1;
     //           } else if (player1move.equals("PAPER") && player2move.equals("ROCK")) {
-    //               i = player1score++;
+    //               return player1
     //           } else (player1move.equals("SCISSORS") && player2move.equals("PAPER")) {
-    //               i = player1score++;
+    //               return player 1
     //           } else {
-    //               i = player2score++;
+    //               return player 2;
     //           }
     //
     ////            ––> figure this logic out. gaaaah
