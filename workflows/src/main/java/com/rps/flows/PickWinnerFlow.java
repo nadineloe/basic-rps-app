@@ -11,6 +11,7 @@ import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.UniqueIdentifier;
+import org.hibernate.boot.model.source.internal.hbm.Helper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,29 +44,15 @@ public class PickWinnerFlow {
             AbstractParty otherParty = players.stream().filter(it -> it != getOurIdentity()).collect(Collectors.toList()).get(0);
 
             String player1move = moveInput.getMove();
+//            String player2move =
 
+//            AbstractParty winner = Helper.whosWinning(ourself, otherParty, player1move, player2move);
 
-
-    //        if (player1move == player2move) {
-    //               throw new FlowException("Tie. Need another round to determine winner.");
-    //           } else if (player1move == null) {
-    //               throw new FlowException("Player 2 hasn't taken his turn yet.");
-    //           } else if (player1move.equals("ROCK") && player2move.equals("SCISSORS")) {
-    //               return player1;
-    //           } else if (player1move.equals("PAPER") && player2move.equals("ROCK")) {
-    //               return player1
-    //           } else (player1move.equals("SCISSORS") && player2move.equals("PAPER")) {
-    //               return player 1
-    //           } else {
-    //               return player 2;
-    //           }
-    //
-    ////            ––> figure this logic out. gaaaah
-
+//            GameState gameOutput = new GameState(players, gameId, winner);
 
             TransactionBuilder builder = Helpers.ourTx(getServiceHub())
                     .addInputState(gameStateAndRef)
-//                    .addOutputState(output)
+//                    .addOutputState(gameOutput)
                     .addCommand(new GameContract.Commands.SubmitTurn(), Arrays.asList(getOurIdentity().getOwningKey()));
 
             builder.verify(getServiceHub());
@@ -74,7 +61,6 @@ public class PickWinnerFlow {
             FlowSession counterpartySession = initiateFlow(otherParty);
 
             return subFlow(new FinalityFlow(selfSignedTransaction, Arrays.asList(counterpartySession)));
-
             }
     }
 

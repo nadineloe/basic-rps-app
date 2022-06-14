@@ -8,9 +8,8 @@ import net.corda.core.identity.AbstractParty;
 import net.corda.core.contracts.UniqueIdentifier;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @BelongsToContract(GameContract.class)
@@ -18,7 +17,7 @@ public class GameState implements LinearState {
     private final List<AbstractParty> players;
     private UniqueIdentifier linearId = UniqueIdentifier.Companion.fromString(UUID.randomUUID().toString());
     private List<AbstractParty> roundWinners = Collections.emptyList();
-    private int maxRounds;
+    private int maxRounds = 3;
 
     public GameState(List<AbstractParty> players) {
         this.players = players;
@@ -41,5 +40,4 @@ public class GameState implements LinearState {
 
     @NotNull
     public UniqueIdentifier getLinearId() { return this.linearId; }
-
 }
