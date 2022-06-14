@@ -90,7 +90,7 @@ public class CreateGameFlow {
 
 
     @InitiatedBy(Initiator.class)
-    class Responder extends FlowLogic<Void> {
+    public static class Responder extends FlowLogic<Void> {
         //private variable
         private FlowSession counterpartySession;
 

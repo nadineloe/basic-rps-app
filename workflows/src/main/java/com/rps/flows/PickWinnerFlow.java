@@ -78,7 +78,7 @@ public class PickWinnerFlow {
     }
 
     @InitiatedBy(Initiator.class)
-    class Responder extends FlowLogic<Void> {
+    public static class Responder extends FlowLogic<Void> {
         private FlowSession counterpartySession;
         public Responder(FlowSession counterpartySession) {
             this.counterpartySession = counterpartySession;

@@ -37,23 +37,24 @@ public class AskOtherPartyFlow {
             FlowSession session = initiateFlow(otherParty);
 
             UntrustworthyData<Boolean> moveCheck = session.sendAndReceive(Boolean.class, gameId);
-            Boolean didOtherPartyMove = moveCheck.unwrap( msg -> {
+            return moveCheck.unwrap(msg -> {
                 assert(msg.getClass().isInstance(Boolean.class));
                 return msg;
             });
-            return didOtherPartyMove;
         }
     }
 
     @InitiatedBy(Initiator.class)
-    public class Responder extends FlowLogic<Void> {
+    public static class Responder extends FlowLogic<Void> {
         //private variable
-        private FlowSession counterpartySession;
+        private final FlowSession counterpartySession;
 
-        //Constructor
         public Responder(FlowSession counterpartySession) {
             this.counterpartySession = counterpartySession;
         }
+
+        //Constructor
+
 
         @Override
         @Suspendable
@@ -64,12 +65,11 @@ public class AskOtherPartyFlow {
 
             // using that gameId to check for MoveState in vault
             StateAndRef moveStateAndRef = getServiceHub().cordaService(GameService.class).getMoveStateAndRef(gameId);
-            MoveState moveInput = (MoveState) moveStateAndRef.getState().getData();
-
-            if (moveInput != null) {
+            if (moveStateAndRef != null) {
                 counterpartySession.send(true);
+            } else {
+                counterpartySession.send(false);
             }
-
             return null;
         }
     }

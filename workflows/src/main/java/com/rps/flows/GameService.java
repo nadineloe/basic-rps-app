@@ -46,13 +46,12 @@ public class GameService extends SingletonSerializeAsToken {
     }
 
     public StateAndRef getMoveStateAndRef (UniqueIdentifier gameId) throws FlowException {
-        List<StateAndRef<MoveState>> moveStateAndRefs = serviceHub.getVaultService()
+        List<StateAndRef<MoveState>> moves = serviceHub.getVaultService()
                 .queryBy(MoveState.class).getStates();
-        StateAndRef<MoveState> inputStateAndRef = moveStateAndRefs.stream().filter(stateAndRef -> {
+        return moves.stream().filter(stateAndRef -> {
             MoveState moveStateInput = stateAndRef.getState().getData();
             return moveStateInput.getLinearId().equals(gameId);
-        }).findAny().orElseThrow(() -> new FlowException("Game Not Found"));
-        return inputStateAndRef;
+        }).findAny().orElse( null);
     }
 
     public TransactionSignature sign(FilteredTransaction transaction) throws FilteredTransactionVerificationException {

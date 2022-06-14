@@ -3,12 +3,15 @@ package com.rps;
 import com.google.common.collect.ImmutableList;
 import com.rps.flows.*;
 import com.rps.states.GameState;
-import com.rps.states.MoveState;
+
+import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.flows.FlowException;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
+
+import net.corda.core.node.NetworkParameters;
 import net.corda.core.node.services.Vault;
 import net.corda.core.node.services.vault.QueryCriteria;
 import net.corda.core.transactions.SignedTransaction;
@@ -32,7 +35,7 @@ public class FlowTests {
 
     @Before
     public void setup() {
-        network = new MockNetwork(new MockNetworkParameters().withCordappsForAllNodes(ImmutableList.of(
+        network = new MockNetwork(new MockNetworkParameters().withNetworkParameters(new NetworkParameters()).withCordappsForAllNodes(ImmutableList.of(
                 TestCordapp.findCordapp("com.rps.contracts"),
                 TestCordapp.findCordapp("com.rps.flows")))
                 .withNotarySpecs(ImmutableList.of(new MockNetworkNotarySpec(CordaX500Name.parse("O=Notary,L=London,C=GB")))));
@@ -65,9 +68,8 @@ public class FlowTests {
         network.runNetwork();
 
         //successful query means the state is stored at node b's vault. Flow went through.
-        QueryCriteria inputCriteria = new QueryCriteria.VaultQueryCriteria().withStatus(Vault.StateStatus.UNCONSUMED);
-        GameState state = b.getServices().getVaultService().queryBy(GameState.class, inputCriteria)
-                .getStates().get(0).getState().getData();
+        GameState game = b.getServices().getVaultService().queryBy(GameState.class).getStates().get(0).getState().getData();
+
     }
 
     @Test
