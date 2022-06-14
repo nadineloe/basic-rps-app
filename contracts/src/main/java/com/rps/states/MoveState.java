@@ -25,7 +25,7 @@ public class MoveState implements ContractState {
         return new MoveState(
                 this.linearId,
                 move
-                );
+        );
     }
 
     public String getMove() { return move; }
