@@ -8,6 +8,7 @@ import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.serialization.CordaSerializable;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,16 +17,19 @@ import java.util.UUID;
 public class MoveState implements ContractState {
     private UniqueIdentifier linearId = UniqueIdentifier.Companion.fromString(UUID.randomUUID().toString());
     private String move;
+    private AbstractParty player;
 
-    public MoveState(UniqueIdentifier linearId, String move) {
+    public MoveState(UniqueIdentifier linearId, String move, AbstractParty player) {
         this.linearId = linearId;
         this.move = move;
+        this.player = player;
     }
 
     public MoveState pickMove(String move) {
         return new MoveState(
                 this.linearId,
-                move
+                move,
+                this.player
         );
     }
 
@@ -37,6 +41,6 @@ public class MoveState implements ContractState {
     @NotNull
     @Override
     public List<AbstractParty> getParticipants() {
-        return null;
+        return Arrays.asList(player);
     }
 }

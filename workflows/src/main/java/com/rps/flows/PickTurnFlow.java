@@ -7,12 +7,15 @@ import com.rps.states.MoveState;
 import net.corda.core.contracts.Command;
 import net.corda.core.flows.*;
 import net.corda.core.identity.AbstractParty;
+import net.corda.core.node.services.Vault;
+import net.corda.core.node.services.vault.QueryCriteria;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.UniqueIdentifier;
 
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,24 +35,26 @@ public class PickTurnFlow extends FlowLogic<SignedTransaction> {
     @Suspendable
     public SignedTransaction call() throws FlowException {
 
-        StateAndRef gameInputStateAndRef = getServiceHub().cordaService(GameService.class).getGameStateAndRef(gameId);
-        GameState gameInput = (GameState) gameInputStateAndRef.getState().getData();
+        List<StateAndRef<MoveState>> inputMoveStateAndRef = getServiceHub().getVaultService().queryBy(MoveState.class).getStates();
+        if(inputMoveStateAndRef.size() != 0){
+            throw new FlowException("You've already made a move.");
+        }
+        else {
+            StateAndRef gameInputStateAndRef = getServiceHub().cordaService(GameService.class).getGameStateAndRef(gameId);
 
-        List<AbstractParty> players = gameInput.getParticipants();
-        List<PublicKey> requiredSigners = (List<PublicKey>) getOurIdentity().getOwningKey();
+            Command command = new Command(new MoveContract.Commands.SubmitTurn(), getOurIdentity().getOwningKey());
+            MoveState moveOutput = new MoveState(gameId, move, getOurIdentity());
 
-        Command command = new Command(new MoveContract.Commands.SubmitTurn(), requiredSigners);
-        MoveState moveOutput = new MoveState(gameId, move);
+            TransactionBuilder builder = Helpers.ourTx(getServiceHub())
+                    .addReferenceState(gameInputStateAndRef.referenced())
+                    .addOutputState(moveOutput)
+                    .addCommand(command);
 
-        TransactionBuilder builder = Helpers.ourTx(getServiceHub())
-                .addReferenceState(gameInputStateAndRef.referenced())
-                .addOutputState(moveOutput)
-                .addCommand(command);
+            builder.verify(getServiceHub());
+            SignedTransaction selfSignedTransaction = getServiceHub().signInitialTransaction(builder);
 
-        builder.verify(getServiceHub());
-        SignedTransaction selfSignedTransaction = getServiceHub().signInitialTransaction(builder);
-
-        // counterparty subflow not needed!
-        return subFlow(new FinalityFlow(selfSignedTransaction, Collections.emptyList()));
+            // counterparty subflow not needed!
+            return subFlow(new FinalityFlow(selfSignedTransaction, Collections.emptyList()));
+        }
     }
 }

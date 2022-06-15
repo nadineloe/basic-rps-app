@@ -29,15 +29,15 @@ public class AskOtherPartyFlow {
         @Suspendable
         public Boolean call() throws FlowException {
 
-            StateAndRef moveStateAndRef = getServiceHub().cordaService(GameService.class).getMoveStateAndRef(gameId);
-            if (moveStateAndRef != null) {
-                StateAndRef gameStateAndRef = getServiceHub().cordaService(GameService.class).getGameStateAndRef(gameId);
-                GameState gameInput = (GameState) gameStateAndRef.getState().getData();
+            List<StateAndRef<MoveState>> inputMoveStateAndRef = getServiceHub().getVaultService().queryBy(MoveState.class).getStates();
+            if(inputMoveStateAndRef.size() != 0){
+                StateAndRef gameInputStateAndRef = getServiceHub().cordaService(GameService.class).getGameStateAndRef(gameId);
+                GameState gameInput = (GameState) gameInputStateAndRef.getState().getData();
 
                 List<AbstractParty> players = gameInput.getParticipants();
-                AbstractParty otherParty = players.stream().filter(it -> it != getOurIdentity()).collect(Collectors.toList()).get(0);
+                AbstractParty counterparty = players.stream().filter(it -> it != getOurIdentity()).collect(Collectors.toList()).get(0);
 
-                FlowSession session = initiateFlow(otherParty);
+                FlowSession session = initiateFlow(counterparty);
 
                 UntrustworthyData<Boolean> moveCheck = session.sendAndReceive(Boolean.class, gameId);
                 return moveCheck.unwrap(msg -> {
@@ -45,7 +45,7 @@ public class AskOtherPartyFlow {
                     return msg;
                 });
             } else {
-                throw new FlowException("You need to first pick your weapon, Player!");
+                return false;
             }
         }
     }

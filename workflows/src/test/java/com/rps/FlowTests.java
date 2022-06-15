@@ -38,10 +38,10 @@ public class FlowTests {
     private AbstractParty player2;
     private List<AbstractParty> players;
 
-    private NetworkParameters testNetworkParameters =
-            new NetworkParameters(4, Collections.emptyList(),
-                    10485760, 10485760 * 50, Instant.now(), 1,
-                    Collections.emptyMap());
+//    private NetworkParameters testNetworkParameters =
+//            new NetworkParameters(4, Collections.emptyList(),
+//                    10485760, 10485760 * 50, Instant.now(), 1,
+//                    Collections.emptyMap());
 
     @Before
     public void setup() {
@@ -75,7 +75,6 @@ public class FlowTests {
         GameState dataA = testStatesNodeA.getStates().get(0).getState().getData();
         GameState dataB = testStatesNodeB.getStates().get(0).getState().getData();
         assert dataA.equals(dataB);
-
     }
 
     @Test
@@ -86,7 +85,33 @@ public class FlowTests {
 
         //successful query means the state is stored at node b's vault. Flow went through.
         GameState game = b.getServices().getVaultService().queryBy(GameState.class).getStates().get(0).getState().getData();
+    }
 
+    @Test
+    public void checkIfMoveStateExists() throws ExecutionException, InterruptedException {
+        CreateGameFlow.Initiator createGameFlow = new CreateGameFlow.Initiator(player2);
+        Future<UniqueIdentifier> createGameFuture = a.startFlow(createGameFlow);
+        network.runNetwork();
+        UniqueIdentifier gameId = createGameFuture.get();
+
+        Vault.Page<MoveState> testStatesNodeA = a.getServices().getVaultService().queryBy(MoveState.class);
+        Vault.Page<MoveState> testStatesNodeB = b.getServices().getVaultService().queryBy(MoveState.class);
+        assert testStatesNodeA.getStates().size() == 1;
+        assert testStatesNodeB.getStates().size() == 1;
+        MoveState dataA = testStatesNodeA.getStates().get(0).getState().getData();
+        MoveState dataB = testStatesNodeB.getStates().get(0).getState().getData();
+        assert dataA.equals(dataB);
+    }
+
+    @Test
+    public void playerCanOnlyMoveOnce() {
+        GameState testState = new GameState(players);
+        a.startFlow(new CreateGameFlow.Initiator(player2));
+        network.runNetwork();
+        Vault.Page<MoveState> testStatesNodeA = a.getServices().getVaultService().queryBy(MoveState.class);
+        Vault.Page<MoveState> testStatesNodeB = b.getServices().getVaultService().queryBy(MoveState.class);
+        assert testStatesNodeA.getStates().size() == 0;
+        assert testStatesNodeB.getStates().size() == 0;
     }
 
     @Test
@@ -95,9 +120,6 @@ public class FlowTests {
         Future<UniqueIdentifier> createGameFuture = a.startFlow(createGameFlow);
         network.runNetwork();
         UniqueIdentifier gameId = createGameFuture.get();
-
-//        GameState gameState = (GameState) a.getServices().cordaService(GameService.class).getGameStateAndRefByPlayer(player2).getState().getData();
-//        UniqueIdentifier gameId = gameState.getLinearId();
 
         AskOtherPartyFlow.Initiator askOtherPartyFlow = new AskOtherPartyFlow.Initiator(gameId);
         Future<Boolean> hasPlayerGoneFuture = a.startFlow(askOtherPartyFlow);

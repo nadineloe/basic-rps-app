@@ -12,7 +12,9 @@ import net.corda.core.transactions.TransactionBuilder;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.UniqueIdentifier;
 
+import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,8 +25,6 @@ public class PickWinnerFlow {
     public class Initiator extends FlowLogic<SignedTransaction>{
 
         private final UniqueIdentifier gameId;
-
-        //public constructor
         public Initiator(UniqueIdentifier gameId) {
             this.gameId = gameId;
         }
@@ -40,40 +40,35 @@ public class PickWinnerFlow {
             MoveState moveInput = (MoveState) moveStateAndRef.getState().getData();
 
             List<AbstractParty> players = gameInput.getParticipants();
-            AbstractParty otherParty = players.stream().filter(it -> it != getOurIdentity()).collect(Collectors.toList()).get(0);
+            AbstractParty counterparty = players.stream().filter(it -> it != getOurIdentity()).collect(Collectors.toList()).get(0);
+            List<PublicKey> requiredSigners = players.stream().map(AbstractParty::getOwningKey).collect(Collectors.toList());
 
-            String player1move = moveInput.getMove();
+            Boolean haveBothPlayersGone = subFlow(new AskOtherPartyFlow.Initiator(gameId));
 
+            if (haveBothPlayersGone) {
+                String myMove = moveInput.getMove();
+                String counterpartyMove = subFlow(new ExchangeMovesFlow.Initiator(gameId));
 
-    //        if (player1move == player2move) {
-    //               throw new FlowException("Tie. Need another round to determine winner.");
-    //           } else if (player1move == null) {
-    //               throw new FlowException("Player 2 hasn't taken his turn yet.");
-    //           } else if (player1move.equals("ROCK") && player2move.equals("SCISSORS")) {
-    //               i = player1score++;
-    //           } else if (player1move.equals("PAPER") && player2move.equals("ROCK")) {
-    //               i = player1score++;
-    //           } else (player1move.equals("SCISSORS") && player2move.equals("PAPER")) {
-    //               i = player1score++;
-    //           } else {
-    //               i = player2score++;
-    //           }
-    //
-    ////            ––> figure this logic out. gaaaah
+                AbstractParty winner = getServiceHub().cordaService(GameService.class).getWinner(myMove, counterpartyMove, counterparty, getOurIdentity());
 
+                TransactionBuilder builder = Helpers.ourTx(getServiceHub())
+                        .addInputState(gameStateAndRef)
+                        .addOutputState(output)
+                        .addCommand(new GameContract.Commands.SubmitTurn(), requiredSigners);
 
-            TransactionBuilder builder = Helpers.ourTx(getServiceHub())
-                    .addInputState(gameStateAndRef)
-//                    .addOutputState(output)
-                    .addCommand(new GameContract.Commands.SubmitTurn(), Arrays.asList(getOurIdentity().getOwningKey()));
+                builder.verify(getServiceHub());
+                SignedTransaction selfSignedTransaction = getServiceHub().signInitialTransaction(builder);
 
-            builder.verify(getServiceHub());
-            SignedTransaction selfSignedTransaction = getServiceHub().signInitialTransaction(builder);
+                FlowSession counterpartySession = initiateFlow(counterparty);
+                List<FlowSession> sessions = Collections.singletonList(counterpartySession);
+                SignedTransaction fullySignedTransaction = subFlow(new CollectSignaturesFlow(selfSignedTransaction, sessions));
+                subFlow(new FinalityFlow(fullySignedTransaction, sessions));
 
-            FlowSession counterpartySession = initiateFlow(otherParty);
-
-            return subFlow(new FinalityFlow(selfSignedTransaction, Arrays.asList(counterpartySession)));
-
+                return subFlow(new FinalityFlow(selfSignedTransaction, Arrays.asList(counterpartySession)));
+            }
+            else {
+                throw new FlowException("Both Players need to pick their weapons first.");
+            }
             }
     }
 

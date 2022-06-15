@@ -54,11 +54,11 @@ public class CreateGameFlow {
         }
 
         //private variables
-        private final AbstractParty otherParty;
+        private final AbstractParty counterparty;
 
         //public constructor
-        public Initiator(AbstractParty otherParty) {
-            this.otherParty = otherParty;
+        public Initiator(AbstractParty counterparty) {
+            this.counterparty = counterparty;
         }
 
 
@@ -70,7 +70,7 @@ public class CreateGameFlow {
         public UniqueIdentifier call() throws FlowException {
 
             progressTracker.setCurrentStep(GENERATING_TRANSACTION);
-            List<AbstractParty> players = Arrays.asList(getOurIdentity(), otherParty);
+            List<AbstractParty> players = Arrays.asList(getOurIdentity(), counterparty);
             GameState output = new GameState(players);
             List<PublicKey> requiredSigners = players.stream().map(AbstractParty::getOwningKey).collect(Collectors.toList());
 
@@ -83,7 +83,7 @@ public class CreateGameFlow {
             progressTracker.setCurrentStep(SIGNING_TRANSACTION);
             builder.verify(getServiceHub());
             SignedTransaction selfSignedTransaction = getServiceHub().signInitialTransaction(builder);
-            FlowSession counterpartySession = initiateFlow(otherParty);
+            FlowSession counterpartySession = initiateFlow(counterparty);
             List<FlowSession> sessions = Collections.singletonList(counterpartySession);
             SignedTransaction fullySignedTransaction = subFlow(new CollectSignaturesFlow(selfSignedTransaction, sessions));
             subFlow(new FinalityFlow(fullySignedTransaction, sessions));

@@ -34,7 +34,6 @@ public class GameState implements LinearState {
         this.maxRounds = maxRounds;
     }
 
-
     public int getMaxRounds() { return maxRounds; };
 
     public List<AbstractParty> getRoundWinners() { return roundWinners; }

@@ -35,23 +35,38 @@ public class GameService extends SingletonSerializeAsToken {
             return inputStateAndRef;
     }
 
-    public StateAndRef getGameStateAndRefByPlayer (AbstractParty counterparty) throws FlowException {
-        List<StateAndRef<GameState>> gameStateAndRefs = serviceHub.getVaultService()
-                .queryBy(GameState.class).getStates();
-        StateAndRef<GameState> inputStateAndRef = gameStateAndRefs.stream().filter(stateAndRef -> {
-            GameState input = stateAndRef.getState().getData();
-            return input.getLinearId().equals(counterparty);
-        }).findAny().orElseThrow(() -> new FlowException("Game Not Found"));
+//    public StateAndRef getGameStateAndRefByPlayer (AbstractParty counterparty) throws FlowException {
+//        List<StateAndRef<GameState>> gameStateAndRefs = serviceHub.getVaultService()
+//                .queryBy(GameState.class).getStates();
+//        StateAndRef<GameState> inputStateAndRef = gameStateAndRefs.stream().filter(stateAndRef -> {
+//            GameState input = stateAndRef.getState().getData();
+//            return input.getLinearId().equals(counterparty);
+//        }).findAny().orElseThrow(() -> new FlowException("Game Not Found"));
+//        return inputStateAndRef;
+//    }
+
+    public StateAndRef getMoveStateAndRef (UniqueIdentifier gameId) throws FlowException {
+        List<StateAndRef<MoveState>> moveStateAndRefs = serviceHub.getVaultService()
+                .queryBy(MoveState.class).getStates();
+        StateAndRef<MoveState> inputStateAndRef = moveStateAndRefs.stream().filter(stateAndRef -> {
+            MoveState input = stateAndRef.getState().getData();
+            return input.getLinearId().equals(gameId);
+        }).findAny().orElseThrow(() -> new FlowException("MoveState Not Found"));
         return inputStateAndRef;
     }
 
-    public StateAndRef getMoveStateAndRef (UniqueIdentifier gameId) throws FlowException {
-        List<StateAndRef<MoveState>> moves = serviceHub.getVaultService()
-                .queryBy(MoveState.class).getStates();
-        return moves.stream().filter(stateAndRef -> {
-            MoveState moveStateInput = stateAndRef.getState().getData();
-            return moveStateInput.getLinearId().equals(gameId);
-        }).findAny().orElse( null);
+    public AbstractParty getWinner(String myMove, String counterpartyMove, AbstractParty counterparty, AbstractParty myself) throws FlowException {
+        if (myMove == counterpartyMove) {
+            throw new FlowException("Tie. Need another round to determine winner.");
+        } else if (myMove.equals("Rock") && counterpartyMove.equals("Scissor")) {
+            return myself;
+        } else if (myMove.equals("Paper") && counterpartyMove.equals("Rock")) {
+            return myself;
+        } else if (myMove.equals("Scissor") && counterpartyMove.equals("Paper")) {
+            return myself;
+        } else {
+            return counterparty;
+        }
     }
 
     public TransactionSignature sign(FilteredTransaction transaction) throws FilteredTransactionVerificationException {
