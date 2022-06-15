@@ -6,6 +6,7 @@ import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.LinearState;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.contracts.UniqueIdentifier;
+import net.corda.core.serialization.CordaSerializable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
