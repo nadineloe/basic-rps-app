@@ -12,6 +12,7 @@ import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
 
 import net.corda.core.node.NetworkParameters;
+import net.corda.core.node.NotaryInfo;
 import net.corda.core.node.services.Vault;
 import net.corda.core.node.services.vault.QueryCriteria;
 import net.corda.core.transactions.SignedTransaction;
@@ -35,7 +36,9 @@ public class FlowTests {
 
     @Before
     public void setup() {
-        network = new MockNetwork(new MockNetworkParameters().withNetworkParameters(new NetworkParameters()).withCordappsForAllNodes(ImmutableList.of(
+
+
+        network = new MockNetwork(new MockNetworkParameters().withCordappsForAllNodes(ImmutableList.of(
                 TestCordapp.findCordapp("com.rps.contracts"),
                 TestCordapp.findCordapp("com.rps.flows")))
                 .withNotarySpecs(ImmutableList.of(new MockNetworkNotarySpec(CordaX500Name.parse("O=Notary,L=London,C=GB")))));
@@ -57,8 +60,14 @@ public class FlowTests {
         GameState testState = new GameState(players);
         a.startFlow(new CreateGameFlow.Initiator(player2));
         network.runNetwork();
-        Vault.Page<GameState> newTestState = a.getServices().getVaultService().queryBy(GameState.class);
-        assert newTestState.getTotalStatesAvailable() == 1;
+        Vault.Page<GameState> testStatesNodeA = a.getServices().getVaultService().queryBy(GameState.class);
+        Vault.Page<GameState> testStatesNodeB = b.getServices().getVaultService().queryBy(GameState.class);
+        assert testStatesNodeA.getStates().size() == 1;
+        assert testStatesNodeB.getStates().size() == 1;
+        GameState dataA = testStatesNodeA.getStates().get(0).getState().getData();
+        GameState dataB = testStatesNodeB.getStates().get(0).getState().getData();
+        assert dataA.equals(dataB);
+
     }
 
     @Test

@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable;
 import com.rps.contracts.GameContract;
 import com.rps.states.GameState;
 import com.sun.istack.NotNull;
+import net.corda.core.crypto.TransactionSignature;
 import net.corda.core.flows.*;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.Party;
@@ -14,6 +15,7 @@ import net.corda.core.utilities.ProgressTracker;
 import net.corda.core.contracts.UniqueIdentifier;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import java.security.PublicKey;
@@ -82,7 +84,9 @@ public class CreateGameFlow {
             builder.verify(getServiceHub());
             SignedTransaction selfSignedTransaction = getServiceHub().signInitialTransaction(builder);
             FlowSession counterpartySession = initiateFlow(otherParty);
-            subFlow(new FinalityFlow(selfSignedTransaction, Arrays.asList(counterpartySession)));
+            List<FlowSession> sessions = Collections.singletonList(counterpartySession);
+            SignedTransaction fullySignedTransaction = subFlow(new CollectSignaturesFlow(selfSignedTransaction, sessions));
+            subFlow(new FinalityFlow(fullySignedTransaction, sessions));
 
             return output.getLinearId();
         }
