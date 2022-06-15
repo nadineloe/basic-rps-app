@@ -10,7 +10,6 @@ import net.corda.core.identity.AbstractParty;
 import net.corda.core.utilities.UntrustworthyData;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ExchangeMovesFlow {
@@ -33,9 +32,9 @@ public class ExchangeMovesFlow {
             GameState gameInput = (GameState) gameStateAndRef.getState().getData();
 
             List<AbstractParty> players = gameInput.getParticipants();
-            AbstractParty otherParty = players.stream().filter(it -> it != getOurIdentity()).collect(Collectors.toList()).get(0);
+            AbstractParty counterparty = players.stream().filter(it -> it != getOurIdentity()).collect(Collectors.toList()).get(0);
 
-            FlowSession counterpartySession = initiateFlow(otherParty);
+            FlowSession counterpartySession = initiateFlow(counterparty);
 
             UntrustworthyData<StateAndRef> moveCheck = counterpartySession.sendAndReceive(StateAndRef.class, gameId);
             StateAndRef<MoveState> counterpartyMoveStateAndRef = moveCheck.unwrap( stateAndRef -> {

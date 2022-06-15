@@ -50,11 +50,12 @@ public class PickWinnerFlow {
                 String counterpartyMove = subFlow(new ExchangeMovesFlow.Initiator(gameId));
 
                 AbstractParty winner = getServiceHub().cordaService(GameService.class).getWinner(myMove, counterpartyMove, counterparty, getOurIdentity());
+                GameState output = new GameState(players, gameId, Arrays.asList(winner));
 
                 TransactionBuilder builder = Helpers.ourTx(getServiceHub())
                         .addInputState(gameStateAndRef)
                         .addOutputState(output)
-                        .addCommand(new GameContract.Commands.SubmitTurn(), requiredSigners);
+                        .addCommand(new GameContract.Commands.EndGame(), requiredSigners);
 
                 builder.verify(getServiceHub());
                 SignedTransaction selfSignedTransaction = getServiceHub().signInitialTransaction(builder);
@@ -69,7 +70,8 @@ public class PickWinnerFlow {
             else {
                 throw new FlowException("Both Players need to pick their weapons first.");
             }
-            }
+
+        }
     }
 
     @InitiatedBy(Initiator.class)

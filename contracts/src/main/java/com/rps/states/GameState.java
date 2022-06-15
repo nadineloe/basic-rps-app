@@ -20,7 +20,7 @@ public class GameState implements LinearState {
     private final List<AbstractParty> players;
     private UniqueIdentifier linearId = UniqueIdentifier.Companion.fromString(UUID.randomUUID().toString());
     private List<AbstractParty> roundWinners = Collections.emptyList();
-    private int maxRounds;
+    private int maxRounds = 3;
 
     public GameState(List<AbstractParty> players) {
         this.players = players;
@@ -32,6 +32,12 @@ public class GameState implements LinearState {
         this.linearId = linearId;
         this.roundWinners = roundWinners;
         this.maxRounds = maxRounds;
+    }
+
+    public GameState(List<AbstractParty> players, UniqueIdentifier linearId, List<AbstractParty> roundWinners) {
+        this.players = players;
+        this.linearId = linearId;
+        this.roundWinners = roundWinners;
     }
 
     public int getMaxRounds() { return maxRounds; };
