@@ -40,7 +40,7 @@ public class AskOtherPartyFlow {
                 FlowSession session = initiateFlow(counterparty);
                 UntrustworthyData<Boolean> moveCheck = session.sendAndReceive(Boolean.class, gameId);
                 return moveCheck.unwrap(msg -> {
-//                    assert(msg.getClass().isInstance(Boolean.class));
+                    assert(msg.getClass().isInstance(Boolean.class));
                     return msg;
                 });
             } else {
