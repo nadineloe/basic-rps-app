@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.rps.flows.*;
 import com.rps.states.GameState;
 
+import com.rps.states.MoveState;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.flows.FlowException;
@@ -21,7 +22,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -34,9 +38,13 @@ public class FlowTests {
     private AbstractParty player2;
     private List<AbstractParty> players;
 
+    private NetworkParameters testNetworkParameters =
+            new NetworkParameters(4, Collections.emptyList(),
+                    10485760, 10485760 * 50, Instant.now(), 1,
+                    Collections.emptyMap());
+
     @Before
     public void setup() {
-
 
         network = new MockNetwork(new MockNetworkParameters().withCordappsForAllNodes(ImmutableList.of(
                 TestCordapp.findCordapp("com.rps.contracts"),
@@ -93,6 +101,18 @@ public class FlowTests {
 
         AskOtherPartyFlow.Initiator askOtherPartyFlow = new AskOtherPartyFlow.Initiator(gameId);
         Future<Boolean> hasPlayerGoneFuture = a.startFlow(askOtherPartyFlow);
+        network.runNetwork();
+    }
+
+    @Test
+    public void checkOtherPlayersMoveState() throws FlowException, ExecutionException, InterruptedException {
+        CreateGameFlow.Initiator createGameFlow = new CreateGameFlow.Initiator(player2);
+        Future<UniqueIdentifier> createGameFuture = a.startFlow(createGameFlow);
+        network.runNetwork();
+        UniqueIdentifier gameId = createGameFuture.get();
+
+        ExchangeMovesFlow.Initiator exchangeMoveFlow = new ExchangeMovesFlow.Initiator(gameId);
+        Future<String> counterpartyMove = a.startFlow(exchangeMoveFlow);
         network.runNetwork();
     }
 

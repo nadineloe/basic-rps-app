@@ -1,6 +1,7 @@
 package com.rps.flows;
 
 import co.paralleluniverse.fibers.Suspendable;
+import com.rps.states.GameState;
 import com.rps.states.MoveState;
 import net.corda.core.flows.FlowSession;
 import net.corda.core.contracts.StateAndRef;
@@ -29,18 +30,23 @@ public class AskOtherPartyFlow {
         public Boolean call() throws FlowException {
 
             StateAndRef moveStateAndRef = getServiceHub().cordaService(GameService.class).getMoveStateAndRef(gameId);
-            MoveState moveInput = (MoveState) moveStateAndRef.getState().getData();
+            if (moveStateAndRef != null) {
+                StateAndRef gameStateAndRef = getServiceHub().cordaService(GameService.class).getGameStateAndRef(gameId);
+                GameState gameInput = (GameState) gameStateAndRef.getState().getData();
 
-            List<AbstractParty> players = moveInput.getParticipants();
-            AbstractParty otherParty = players.stream().filter(it -> it != getOurIdentity()).collect(Collectors.toList()).get(0);
+                List<AbstractParty> players = gameInput.getParticipants();
+                AbstractParty otherParty = players.stream().filter(it -> it != getOurIdentity()).collect(Collectors.toList()).get(0);
 
-            FlowSession session = initiateFlow(otherParty);
+                FlowSession session = initiateFlow(otherParty);
 
-            UntrustworthyData<Boolean> moveCheck = session.sendAndReceive(Boolean.class, gameId);
-            return moveCheck.unwrap(msg -> {
-                assert(msg.getClass().isInstance(Boolean.class));
-                return msg;
-            });
+                UntrustworthyData<Boolean> moveCheck = session.sendAndReceive(Boolean.class, gameId);
+                return moveCheck.unwrap(msg -> {
+                    assert(msg.getClass().isInstance(Boolean.class));
+                    return msg;
+                });
+            } else {
+                throw new FlowException("You need to first pick your weapon, Player!");
+            }
         }
     }
 
@@ -52,9 +58,6 @@ public class AskOtherPartyFlow {
         public Responder(FlowSession counterpartySession) {
             this.counterpartySession = counterpartySession;
         }
-
-        //Constructor
-
 
         @Override
         @Suspendable
