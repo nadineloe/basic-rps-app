@@ -5,6 +5,7 @@ import net.corda.core.contracts.BelongsToContract;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.contracts.UniqueIdentifier;
+import net.corda.core.serialization.CordaSerializable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -30,6 +31,22 @@ public class MoveState implements ContractState {
                 move,
                 this.player
         );
+    }
+
+    @CordaSerializable
+    public enum MoveChoices {
+        ROCK,
+        PAPER,
+        SCISSOR;
+    }
+
+    public boolean isValid(String move) {
+        List choices = Arrays.asList(MoveChoices.values());
+        if(choices.contains(MoveChoices.valueOf(move))){
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public String getMove() { return move; }

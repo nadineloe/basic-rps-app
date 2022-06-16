@@ -5,11 +5,14 @@ import com.rps.flows.*;
 import com.rps.states.GameState;
 
 import com.rps.states.MoveState;
+import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.flows.FlowException;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.CordaX500Name;
 
+import net.corda.core.node.NetworkParameters;
+import net.corda.core.node.NotaryInfo;
 import net.corda.core.node.services.Vault;
 import net.corda.core.node.services.vault.QueryCriteria;
 import net.corda.core.transactions.SignedTransaction;
@@ -19,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -30,16 +34,21 @@ public class FlowTests {
     private AbstractParty player1;
     private AbstractParty player2;
     private List<AbstractParty> players;
+    List<NotaryInfo> notaryinfo = Arrays.asList();
 
-//    private NetworkParameters testNetworkParameters =
-//            new NetworkParameters(4, Collections.emptyList(),
-//                    10485760, 10485760 * 50, Instant.now(), 1,
-//                    Collections.emptyMap());
+    private NetworkParameters testNetworkParameters =
+            new NetworkParameters(4,
+                    notaryinfo,
+                    10485760,
+                    524288000,
+                    java.time.Instant.now(),
+                    1,
+                    Collections.emptyMap());
 
     @Before
     public void setup() {
 
-        network = new MockNetwork(new MockNetworkParameters().withCordappsForAllNodes(ImmutableList.of(
+        network = new MockNetwork(new MockNetworkParameters().withNetworkParameters(testNetworkParameters).withCordappsForAllNodes(ImmutableList.of(
                 TestCordapp.findCordapp("com.rps.contracts"),
                 TestCordapp.findCordapp("com.rps.flows")))
                 .withNotarySpecs(ImmutableList.of(new MockNetworkNotarySpec(CordaX500Name.parse("O=Notary,L=London,C=GB")))));
@@ -55,6 +64,10 @@ public class FlowTests {
     public void tearDown() {
         network.stopNodes();
     }
+
+    // ###############################################
+    //          CREATE GAME FLOW
+    // ###############################################
 
     @Test
     public void checkIfGameStateExists() {
@@ -81,44 +94,7 @@ public class FlowTests {
     }
 
     @Test
-    public void checkIfMoveStateEmptyWhenNoTurnPicked() throws ExecutionException, InterruptedException {
-        CreateGameFlow.Initiator createGameFlow = new CreateGameFlow.Initiator(player2);
-        Future<UniqueIdentifier> createGameFuture = a.startFlow(createGameFlow);
-        network.runNetwork();
-        UniqueIdentifier gameId = createGameFuture.get();
-
-        Vault.Page<MoveState> testStatesNodeA = a.getServices().getVaultService().queryBy(MoveState.class);
-        Vault.Page<MoveState> testStatesNodeB = b.getServices().getVaultService().queryBy(MoveState.class);
-        assert testStatesNodeA.getStates().size() == 1;
-        assert testStatesNodeB.getStates().size() == 1;
-        MoveState dataA = testStatesNodeA.getStates().get(0).getState().getData();
-        MoveState dataB = testStatesNodeB.getStates().get(0).getState().getData();
-        assert dataA.equals(dataB);
-    }
-
-    @Test
-    public void checkIfMoveStateExists() throws ExecutionException, InterruptedException {
-        CreateGameFlow.Initiator createGameFlow = new CreateGameFlow.Initiator(player2);
-        Future<UniqueIdentifier> createGameFuture = a.startFlow(createGameFlow);
-        network.runNetwork();
-        UniqueIdentifier gameId = createGameFuture.get();
-
-        PickTurnFlow flow = new PickTurnFlow(gameId, "Rock");
-        Future<SignedTransaction> future = a.startFlow(flow);
-        network.runNetwork();
-
-        Vault.Page<MoveState> testStatesNodeA = a.getServices().getVaultService().queryBy(MoveState.class);
-        Vault.Page<MoveState> testStatesNodeB = b.getServices().getVaultService().queryBy(MoveState.class);
-        assert testStatesNodeA.getStates().size() == 1;
-        assert testStatesNodeB.getStates().size() == 1;
-        MoveState dataA = testStatesNodeA.getStates().get(0).getState().getData();
-        MoveState dataB = testStatesNodeB.getStates().get(0).getState().getData();
-        assert dataA.equals(dataB);
-    }
-
-
-    @Test
-    public void playerCanOnlyMoveOnce() {
+    public void checkIfMoveStateEmptyWhenNoTurnPicked() {
         GameState testState = new GameState(players);
         a.startFlow(new CreateGameFlow.Initiator(player2));
         network.runNetwork();
@@ -128,6 +104,57 @@ public class FlowTests {
         assert testStatesNodeB.getStates().size() == 0;
     }
 
+
+    // ###############################################
+    //          PICK TURN FLOW
+    // ###############################################
+
+    @Test
+    public void checkIfPickTurnFlowCreatesMoveState() throws ExecutionException, InterruptedException {
+        CreateGameFlow.Initiator createGameFlow = new CreateGameFlow.Initiator(player2);
+        Future<UniqueIdentifier> createGameFuture = a.startFlow(createGameFlow);
+        network.runNetwork();
+        UniqueIdentifier gameId = createGameFuture.get();
+
+        PickTurnFlow flow = new PickTurnFlow(gameId, "SCISSOR");
+        a.startFlow(flow);
+        network.runNetwork();
+
+        Vault.Page<MoveState> testStatesNodeA = a.getServices().getVaultService().queryBy(MoveState.class);
+        Vault.Page<MoveState> testStatesNodeB = b.getServices().getVaultService().queryBy(MoveState.class);
+        assert testStatesNodeA.getStates().size() == 1;
+        assert testStatesNodeB.getStates().size() == 0;
+    }
+
+    @Test
+    public void checkIfBothMoveStatesPresentWhenBothPlayersMoved() throws ExecutionException, InterruptedException {
+        CreateGameFlow.Initiator createGameFlow = new CreateGameFlow.Initiator(player2);
+        Future<UniqueIdentifier> createGameFuture = a.startFlow(createGameFlow);
+        network.runNetwork();
+        UniqueIdentifier gameId = createGameFuture.get();
+
+        PickTurnFlow pickTurnFlow = new PickTurnFlow(gameId, "ROCK");
+        a.startFlow(pickTurnFlow);
+        network.runNetwork();
+
+        PickTurnFlow newPickTurnFlow = new PickTurnFlow(gameId, "PAPER");
+        b.startFlow(newPickTurnFlow);
+        network.runNetwork();
+
+        Vault.Page<MoveState> testStatesNodeA = a.getServices().getVaultService().queryBy(MoveState.class);
+        Vault.Page<MoveState> testStatesNodeB = b.getServices().getVaultService().queryBy(MoveState.class);
+        assert testStatesNodeA.getStates().size() == 1;
+        assert testStatesNodeB.getStates().size() == 1;
+        MoveState dataA = testStatesNodeA.getStates().get(0).getState().getData();
+        MoveState dataB = testStatesNodeB.getStates().get(0).getState().getData();
+        assert dataA != dataB;
+    }
+
+
+    // ###############################################
+    //          CHECK STATUS FLOW
+    // ###############################################
+
     @Test
     public void checkIfMsgIsBoolean() throws FlowException, ExecutionException, InterruptedException {
         CreateGameFlow.Initiator createGameFlow = new CreateGameFlow.Initiator(player2);
@@ -135,10 +162,47 @@ public class FlowTests {
         network.runNetwork();
         UniqueIdentifier gameId = createGameFuture.get();
 
-        CheckStatusFlow.Initiator askOtherPartyFlow = new CheckStatusFlow.Initiator(gameId);
-        Future<Boolean> hasPlayerGoneFuture = a.startFlow(askOtherPartyFlow);
+        CheckStatusFlow.Initiator checkStatusFlow = new CheckStatusFlow.Initiator(gameId);
+        Future<Boolean> hasPlayerGoneFuture = a.startFlow(checkStatusFlow);
         network.runNetwork();
     }
+
+    @Test
+    public void checkStatusFlowShouldReturnFalseIfNoMovesHaveBeenMade() throws ExecutionException, InterruptedException {
+        CreateGameFlow.Initiator createGameFlow = new CreateGameFlow.Initiator(player2);
+        Future<UniqueIdentifier> createGameFuture = a.startFlow(createGameFlow);
+        network.runNetwork();
+        UniqueIdentifier gameId = createGameFuture.get();
+
+        CheckStatusFlow.Initiator flow = new CheckStatusFlow.Initiator(gameId);
+        Future<Boolean> checkStatusFuture = a.startFlow(flow);
+        network.runNetwork();
+
+        Boolean future = checkStatusFuture.get();
+        assert future == false;
+    }
+
+
+    @Test
+    public void checkStatusFlowShouldReturnFalseIfPlayer2NotReady() throws ExecutionException, InterruptedException {
+        CreateGameFlow.Initiator createGameFlow = new CreateGameFlow.Initiator(player2);
+        Future<UniqueIdentifier> createGameFuture = a.startFlow(createGameFlow);
+        network.runNetwork();
+        UniqueIdentifier gameId = createGameFuture.get();
+
+        PickTurnFlow pickTurnFlow = new PickTurnFlow(gameId, "ROCK");
+        a.startFlow(pickTurnFlow);
+        network.runNetwork();
+
+        CheckStatusFlow.Initiator checkStatusFlow = new CheckStatusFlow.Initiator(gameId);
+        Future<Boolean> checkStatusFuture = a.startFlow(checkStatusFlow);
+        network.runNetwork();
+
+        b.getServices().getVaultService().queryBy(ContractState.class);
+        Future<Boolean> future = checkStatusFuture;
+        if (future.get() != false) throw new AssertionError();
+    }
+
 
     @Test
     public void checkOtherPlayersMoveState() throws FlowException, ExecutionException, InterruptedException {
@@ -147,8 +211,31 @@ public class FlowTests {
         network.runNetwork();
         UniqueIdentifier gameId = createGameFuture.get();
 
-        ExchangeMovesFlow.Initiator exchangeMoveFlow = new ExchangeMovesFlow.Initiator(gameId);
-        Future<String> counterpartyMove = a.startFlow(exchangeMoveFlow);
+        PickTurnFlow pickTurnFlow = new PickTurnFlow(gameId, "ROCK");
+        Future<SignedTransaction> futureP1 = a.startFlow(pickTurnFlow);
         network.runNetwork();
+
+        PickTurnFlow newPickTurnFlow = new PickTurnFlow(gameId, "PAPER");
+        Future<SignedTransaction> futureP2 = b.startFlow(newPickTurnFlow);
+        network.runNetwork();
+
+        Vault.Page<MoveState> testStatesNodeA = a.getServices().getVaultService().queryBy(MoveState.class);
+        Vault.Page<MoveState> testStatesNodeB = b.getServices().getVaultService().queryBy(MoveState.class);
+        assert testStatesNodeA.getStates().size() == 1;
+        assert testStatesNodeB.getStates().size() == 1;
+        MoveState dataA = testStatesNodeA.getStates().get(0).getState().getData();
+        MoveState dataB = testStatesNodeB.getStates().get(0).getState().getData();
+
+        ExchangeMovesFlow.Initiator exchangeMoveFlow = new ExchangeMovesFlow.Initiator(gameId);
+        Future<String> counterpartyMoveFuture = a.startFlow(exchangeMoveFlow);
+        try {
+            network.runNetwork();
+            counterpartyMoveFuture.get();
+            String counterpartyMove = counterpartyMoveFuture.get();
+            System.out.println(counterpartyMove);
+            assert counterpartyMove.equals(dataB.getMove());
+        } catch (Exception exception) {
+            System.out.println(exception.getMessage());
+        }
     }
 }

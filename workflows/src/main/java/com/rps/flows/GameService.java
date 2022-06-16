@@ -35,16 +35,6 @@ public class GameService extends SingletonSerializeAsToken {
             return inputStateAndRef;
     }
 
-//    public StateAndRef getGameStateAndRefByPlayer (AbstractParty counterparty) throws FlowException {
-//        List<StateAndRef<GameState>> gameStateAndRefs = serviceHub.getVaultService()
-//                .queryBy(GameState.class).getStates();
-//        StateAndRef<GameState> inputStateAndRef = gameStateAndRefs.stream().filter(stateAndRef -> {
-//            GameState input = stateAndRef.getState().getData();
-//            return input.getLinearId().equals(counterparty);
-//        }).findAny().orElseThrow(() -> new FlowException("Game Not Found"));
-//        return inputStateAndRef;
-//    }
-
     public StateAndRef getMoveStateAndRef (UniqueIdentifier gameId) throws FlowException {
         List<StateAndRef<MoveState>> moveStateAndRefs = serviceHub.getVaultService()
                 .queryBy(MoveState.class).getStates();
@@ -58,11 +48,11 @@ public class GameService extends SingletonSerializeAsToken {
     public AbstractParty getWinner(String myMove, String counterpartyMove, AbstractParty counterparty, AbstractParty myself) throws FlowException {
         if (myMove == counterpartyMove) {
             throw new FlowException("Tie. Need another round to determine winner.");
-        } else if (myMove.equals("Rock") && counterpartyMove.equals("Scissor")) {
+        } else if (myMove.equals("ROCK") && counterpartyMove.equals("SCISSOR")) {
             return myself;
-        } else if (myMove.equals("Paper") && counterpartyMove.equals("Rock")) {
+        } else if (myMove.equals("PAPER") && counterpartyMove.equals("ROCK")) {
             return myself;
-        } else if (myMove.equals("Scissor") && counterpartyMove.equals("Paper")) {
+        } else if (myMove.equals("SCISSOR") && counterpartyMove.equals("PAPER")) {
             return myself;
         } else {
             return counterparty;

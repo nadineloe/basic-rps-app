@@ -39,6 +39,9 @@ public class PickTurnFlow extends FlowLogic<SignedTransaction> {
         if(inputMoveStateAndRef.size() != 0){
             throw new FlowException("You've already made a move.");
         }
+//        else if(isValid(move) == false){
+//            throw new FlowException("Move isn't valid. Allowed moves are: ROCK, PAPER, SCISSOR.");
+//        }
         else {
             StateAndRef gameInputStateAndRef = getServiceHub().cordaService(GameService.class).getGameStateAndRef(gameId);
 

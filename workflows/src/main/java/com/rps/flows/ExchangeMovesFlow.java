@@ -36,13 +36,24 @@ public class ExchangeMovesFlow {
 
             FlowSession counterpartySession = initiateFlow(counterparty);
 
-            UntrustworthyData<StateAndRef> moveCheck = counterpartySession.sendAndReceive(StateAndRef.class, gameId);
-            StateAndRef<MoveState> counterpartyMoveStateAndRef = moveCheck.unwrap( stateAndRef -> {
-                assert(stateAndRef.equals(StateAndRef.class));
-                return stateAndRef;
-            });
-            String counterpartyMove = counterpartyMoveStateAndRef.getState().getData().getMove();
-            return counterpartyMove;
+            try {
+                UntrustworthyData<StateAndRef> moveCheck = counterpartySession.sendAndReceive(StateAndRef.class, gameId);
+                StateAndRef<MoveState> counterpartyMoveStateAndRef = moveCheck.unwrap(stateAndRef -> {
+                    assert (stateAndRef.getClass().isInstance(StateAndRef.class));
+                    // java type casting
+                    if (stateAndRef instanceof StateAndRef) {
+                        return (StateAndRef<MoveState>) stateAndRef;
+                    }
+                    return null;
+                });
+                if (counterpartyMoveStateAndRef != null)
+                    return counterpartyMoveStateAndRef.getState().getData().getMove();
+            } catch (Exception exception) {
+                System.out.println(exception.getMessage());
+            }
+            // default value - won't be returned if try successfully returns move
+            // if party 2 not ready will return null instead of move
+            return null;
         }
     }
 
