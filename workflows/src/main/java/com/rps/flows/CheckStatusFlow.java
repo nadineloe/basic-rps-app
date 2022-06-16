@@ -39,9 +39,9 @@ public class CheckStatusFlow {
 
                 FlowSession session = initiateFlow(counterparty);
                 UntrustworthyData<Boolean> moveCheck = session.sendAndReceive(Boolean.class, gameId);
-                return moveCheck.unwrap(msg -> {
-                    assert(msg.getClass().isInstance(Boolean.class));
-                    return msg;
+                return moveCheck.unwrap(hasOtherPlayerGone -> {
+                    assert(hasOtherPlayerGone.getClass().isInstance(Boolean.class));
+                    return hasOtherPlayerGone;
                 });
             } else {
                 return false;
