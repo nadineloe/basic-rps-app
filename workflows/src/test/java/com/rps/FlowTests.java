@@ -5,15 +5,11 @@ import com.rps.flows.*;
 import com.rps.states.GameState;
 
 import com.rps.states.MoveState;
-import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.flows.FlowException;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.CordaX500Name;
-import net.corda.core.identity.Party;
 
-import net.corda.core.node.NetworkParameters;
-import net.corda.core.node.NotaryInfo;
 import net.corda.core.node.services.Vault;
 import net.corda.core.node.services.vault.QueryCriteria;
 import net.corda.core.transactions.SignedTransaction;
@@ -22,10 +18,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.time.Instant;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -88,7 +81,7 @@ public class FlowTests {
     }
 
     @Test
-    public void checkIfMoveStateExists() throws ExecutionException, InterruptedException {
+    public void checkIfMoveStateEmptyWhenNoTurnPicked() throws ExecutionException, InterruptedException {
         CreateGameFlow.Initiator createGameFlow = new CreateGameFlow.Initiator(player2);
         Future<UniqueIdentifier> createGameFuture = a.startFlow(createGameFlow);
         network.runNetwork();
@@ -102,6 +95,27 @@ public class FlowTests {
         MoveState dataB = testStatesNodeB.getStates().get(0).getState().getData();
         assert dataA.equals(dataB);
     }
+
+    @Test
+    public void checkIfMoveStateExists() throws ExecutionException, InterruptedException {
+        CreateGameFlow.Initiator createGameFlow = new CreateGameFlow.Initiator(player2);
+        Future<UniqueIdentifier> createGameFuture = a.startFlow(createGameFlow);
+        network.runNetwork();
+        UniqueIdentifier gameId = createGameFuture.get();
+
+        PickTurnFlow flow = new PickTurnFlow(gameId, "Rock");
+        Future<SignedTransaction> future = a.startFlow(flow);
+        network.runNetwork();
+
+        Vault.Page<MoveState> testStatesNodeA = a.getServices().getVaultService().queryBy(MoveState.class);
+        Vault.Page<MoveState> testStatesNodeB = b.getServices().getVaultService().queryBy(MoveState.class);
+        assert testStatesNodeA.getStates().size() == 1;
+        assert testStatesNodeB.getStates().size() == 1;
+        MoveState dataA = testStatesNodeA.getStates().get(0).getState().getData();
+        MoveState dataB = testStatesNodeB.getStates().get(0).getState().getData();
+        assert dataA.equals(dataB);
+    }
+
 
     @Test
     public void playerCanOnlyMoveOnce() {
@@ -121,7 +135,7 @@ public class FlowTests {
         network.runNetwork();
         UniqueIdentifier gameId = createGameFuture.get();
 
-        AskOtherPartyFlow.Initiator askOtherPartyFlow = new AskOtherPartyFlow.Initiator(gameId);
+        CheckStatusFlow.Initiator askOtherPartyFlow = new CheckStatusFlow.Initiator(gameId);
         Future<Boolean> hasPlayerGoneFuture = a.startFlow(askOtherPartyFlow);
         network.runNetwork();
     }
@@ -137,20 +151,4 @@ public class FlowTests {
         Future<String> counterpartyMove = a.startFlow(exchangeMoveFlow);
         network.runNetwork();
     }
-
-//    @Test
-//    public void checkIfPickTurnFlowExists() {
-//        CreateGameFlow.Initiator flow = new CreateGameFlow.Initiator(player2);
-//        Future<UniqueIdentifier> future = a.startFlow(flow);
-//        network.runNetwork();
-//
-//        PickTurnFlow.Initiator flow = new PickTurnFlow.Initiator(gameId);
-//        Future<SignedTransaction> future = a.startFlow(flow);
-//        network.runNetwork();
-//
-//        //successful query means the state is stored at node b's vault. Flow went through.
-//        QueryCriteria inputCriteria = new QueryCriteria.VaultQueryCriteria().withStatus(Vault.StateStatus.UNCONSUMED);
-//        GameState state = b.getServices().getVaultService().queryBy(GameState.class, inputCriteria)
-//                .getStates().get(0).getState().getData();
-//    }
 }

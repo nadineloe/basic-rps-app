@@ -43,7 +43,7 @@ public class PickWinnerFlow {
             AbstractParty counterparty = players.stream().filter(it -> it != getOurIdentity()).collect(Collectors.toList()).get(0);
             List<PublicKey> requiredSigners = players.stream().map(AbstractParty::getOwningKey).collect(Collectors.toList());
 
-            Boolean haveBothPlayersGone = subFlow(new AskOtherPartyFlow.Initiator(gameId));
+            Boolean haveBothPlayersGone = subFlow(new CheckStatusFlow.Initiator(gameId));
 
             if (haveBothPlayersGone) {
                 String myMove = moveInput.getMove();

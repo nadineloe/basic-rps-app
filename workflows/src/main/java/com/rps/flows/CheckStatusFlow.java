@@ -13,7 +13,7 @@ import net.corda.core.utilities.UntrustworthyData;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AskOtherPartyFlow {
+public class CheckStatusFlow {
 
     @StartableByRPC
     @InitiatingFlow
@@ -63,11 +63,9 @@ public class AskOtherPartyFlow {
         public Void call() throws FlowException {
             // receiving the gameId from player1
             UniqueIdentifier gameId = counterpartySession.receive(UniqueIdentifier.class).unwrap(data -> data);
-            //UniqueIdentifier didBothPartiesMove = counterpartySession.sendAndReceive(UniqueIdentifier.class, true).unwrap(data -> data);
 
-            // using that gameId to check for MoveState in vault
-            StateAndRef moveStateAndRef = getServiceHub().cordaService(GameService.class).getMoveStateAndRef(gameId);
-            if (moveStateAndRef != null) {
+            List<StateAndRef<MoveState>> inputMoveStateAndRef = getServiceHub().getVaultService().queryBy(MoveState.class).getStates();
+            if(inputMoveStateAndRef.size() != 0){
                 counterpartySession.send(true);
             } else {
                 counterpartySession.send(false);
