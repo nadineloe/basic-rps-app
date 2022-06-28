@@ -15,6 +15,8 @@ import net.corda.core.transactions.FilteredTransactionVerificationException;
 
 import java.util.List;
 
+import static com.rps.states.MoveState.MoveChoices.*;
+
 
 @CordaService
 public class GameService extends SingletonSerializeAsToken {
@@ -40,22 +42,20 @@ public class GameService extends SingletonSerializeAsToken {
                 .queryBy(MoveState.class).getStates();
         StateAndRef<MoveState> inputStateAndRef = moveStateAndRefs.stream().filter(stateAndRef -> {
             MoveState input = stateAndRef.getState().getData();
-            return input.getLinearId().equals(gameId);
+            return input.getGameId().equals(gameId);
         }).findAny().orElseThrow(() -> new FlowException("MoveState Not Found"));
         return inputStateAndRef;
     }
 
     public AbstractParty getWinner(String myMove, String counterpartyMove, AbstractParty counterparty, AbstractParty myself) throws FlowException {
-        if (myMove == counterpartyMove) {
+        if (myMove.equals(counterpartyMove)) {
             throw new FlowException("Tie. Need another round to determine winner.");
         } else if (myMove.equals("ROCK") && counterpartyMove.equals("SCISSOR")) {
-            return myself;
-        } else if (myMove.equals("PAPER") && counterpartyMove.equals("ROCK")) {
             return myself;
         } else if (myMove.equals("SCISSOR") && counterpartyMove.equals("PAPER")) {
             return myself;
         } else {
-            return counterparty;
+            throw new FlowException("this didnt work");
         }
     }
 

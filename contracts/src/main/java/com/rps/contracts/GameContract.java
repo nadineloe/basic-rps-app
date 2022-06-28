@@ -39,7 +39,8 @@ public class GameContract implements Contract {
     public interface Commands extends CommandData {
         //In our hello-world app, We will only have one command.
         class Create implements Commands {}
-        class SubmitTurn implements Commands {}
+        class PickWinner implements Commands {}
+
         class EndGame implements Commands {}
     }
 }

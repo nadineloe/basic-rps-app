@@ -1,6 +1,6 @@
 package com.rps.contracts;
 
-import com.rps.states.GameState;
+import com.rps.states.MoveState;
 import net.corda.core.contracts.CommandData;
 import net.corda.core.contracts.Contract;
 import net.corda.core.transactions.LedgerTransaction;
@@ -10,7 +10,7 @@ import net.corda.core.transactions.LedgerTransaction;
 // ************
 
 public class MoveContract implements Contract {
-    public static final String ID = "com.rps.contracts.GameContract";
+    public static final String ID = "com.rps.contracts.MoveContract";
 
     @Override
     public void verify(LedgerTransaction tx) throws IllegalArgumentException {
@@ -25,8 +25,8 @@ public class MoveContract implements Contract {
         if(tx.getOutputStates().size() != 1 || tx.getInputStates().size() != 0)
             throw new IllegalArgumentException("Zero Input and One Output Expected");
 
-        if(!(tx.getOutput(0) instanceof GameState))
-            throw new IllegalArgumentException("Output of type GameState expected");
+        if(!(tx.getOutput(0) instanceof MoveState))
+            throw new IllegalArgumentException("Output of type MoveState expected");
 
 
     }
@@ -43,6 +43,7 @@ public class MoveContract implements Contract {
     public interface Commands extends CommandData {
         //In our hello-world app, We will only have one command.
         class SubmitTurn implements Commands {}
+        class EndRound implements Commands {}
     }
 }
 

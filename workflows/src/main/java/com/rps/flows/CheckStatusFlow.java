@@ -12,6 +12,7 @@ import net.corda.core.utilities.UntrustworthyData;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /*
 * CheckStatusFlow returns if player 2 has already made a move
@@ -20,7 +21,7 @@ public class CheckStatusFlow {
 
     @StartableByRPC
     @InitiatingFlow
-    public static class Initiator extends FlowLogic<AbstractParty> {
+    public static class Initiator extends FlowLogic<Boolean> {
 
         private final UniqueIdentifier gameId;
 
@@ -41,22 +42,13 @@ public class CheckStatusFlow {
 
                 List<AbstractParty> players = gameInput.getParticipants();
 
-                for (int i = 0; i < players.size()-1; i++) {
-                    if (players.get(i) != getOurIdentity()) {
-                        counterparty = players.get(i);
-                    }
-                }
+                this.counterparty = players.stream().filter(player -> !player.equals(getOurIdentity())).collect(Collectors.toList()).get(0);
 
                 FlowSession session = initiateFlow(counterparty);
                 UntrustworthyData<Boolean> moveCheck = session.sendAndReceive(Boolean.class, gameId);
-                Boolean test = moveCheck.unwrap(hasOtherPlayerGone -> {
-                    assert (hasOtherPlayerGone.getClass().isInstance(Boolean.class));
-                    return (Boolean) hasOtherPlayerGone;
-                });
-                return test;
-            } else {
-                return false;
+                return moveCheck.unwrap(hasOtherPlayerGone -> hasOtherPlayerGone);
             }
+                return false;
         }
     }
 

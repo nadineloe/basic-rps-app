@@ -3,18 +3,14 @@ package com.rps;
 import com.google.common.collect.ImmutableList;
 import com.rps.flows.*;
 import com.rps.states.GameState;
-
 import com.rps.states.MoveState;
-import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.flows.FlowException;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.CordaX500Name;
-
 import net.corda.core.node.NetworkParameters;
 import net.corda.core.node.NotaryInfo;
 import net.corda.core.node.services.Vault;
-import net.corda.core.node.services.vault.QueryCriteria;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.testing.node.*;
 import org.junit.After;
@@ -177,9 +173,7 @@ public class FlowTests {
         CheckStatusFlow.Initiator flow = new CheckStatusFlow.Initiator(gameId);
         Future<Boolean> checkStatusFuture = a.startFlow(flow);
         network.runNetwork();
-
-        Boolean future = checkStatusFuture.get();
-        assert future == false;
+        assert !checkStatusFuture.get();
     }
 
 
@@ -197,10 +191,7 @@ public class FlowTests {
         CheckStatusFlow.Initiator checkStatusFlow = new CheckStatusFlow.Initiator(gameId);
         Future<Boolean> checkStatusFuture = a.startFlow(checkStatusFlow);
         network.runNetwork();
-
-        b.getServices().getVaultService().queryBy(ContractState.class);
-        Future<Boolean> future = checkStatusFuture;
-        if (future.get() != false) throw new AssertionError();
+        assert !checkStatusFuture.get();
     }
 
 
@@ -221,21 +212,42 @@ public class FlowTests {
 
         Vault.Page<MoveState> testStatesNodeA = a.getServices().getVaultService().queryBy(MoveState.class);
         Vault.Page<MoveState> testStatesNodeB = b.getServices().getVaultService().queryBy(MoveState.class);
-        assert testStatesNodeA.getStates().size() == 1;
-        assert testStatesNodeB.getStates().size() == 1;
         MoveState dataA = testStatesNodeA.getStates().get(0).getState().getData();
         MoveState dataB = testStatesNodeB.getStates().get(0).getState().getData();
 
         ExchangeMovesFlow.Initiator exchangeMoveFlow = new ExchangeMovesFlow.Initiator(gameId);
         Future<String> counterpartyMoveFuture = a.startFlow(exchangeMoveFlow);
-        try {
-            network.runNetwork();
-            counterpartyMoveFuture.get();
-            String counterpartyMove = counterpartyMoveFuture.get();
-            System.out.println(counterpartyMove);
-            assert counterpartyMove.equals(dataB.getMove());
-        } catch (Exception exception) {
-            System.out.println(exception.getMessage());
-        }
+        network.runNetwork();
+        String counterpartyMove = counterpartyMoveFuture.get();
+        System.out.println(counterpartyMove);
+        assert counterpartyMove.equals(dataB.getMove());
+    }
+
+    @Test
+    public void checkWinner() throws FlowException, ExecutionException, InterruptedException {
+        CreateGameFlow.Initiator createGameFlow = new CreateGameFlow.Initiator(player2);
+        Future<UniqueIdentifier> createGameFuture = a.startFlow(createGameFlow);
+        network.runNetwork();
+        UniqueIdentifier gameId = createGameFuture.get();
+
+        PickTurnFlow pickTurnFlow = new PickTurnFlow(gameId, "ROCK");
+        Future<SignedTransaction> futureP1 = a.startFlow(pickTurnFlow);
+        network.runNetwork();
+
+        PickTurnFlow newPickTurnFlow = new PickTurnFlow(gameId, "PAPER");
+        Future<SignedTransaction> futureP2 = b.startFlow(newPickTurnFlow);
+        network.runNetwork();
+
+        Vault.Page<MoveState> testStatesNodeA = a.getServices().getVaultService().queryBy(MoveState.class);
+        Vault.Page<MoveState> testStatesNodeB = b.getServices().getVaultService().queryBy(MoveState.class);
+        assert testStatesNodeA.getStates().size() == 1;
+        assert testStatesNodeB.getStates().size() == 1;
+        MoveState dataA = testStatesNodeA.getStates().get(0).getState().getData();
+        MoveState dataB = testStatesNodeB.getStates().get(0).getState().getData();
+
+        Future<AbstractParty> whoIsWinner = a.startFlow(new PickWinnerFlow.Initiator(gameId));
+//        System.out.println(whoIsWinner);
+        AbstractParty winner = whoIsWinner.get();
+        assert winner.equals(player2);
     }
 }

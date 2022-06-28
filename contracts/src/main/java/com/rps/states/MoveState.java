@@ -15,19 +15,19 @@ import java.util.UUID;
 
 @BelongsToContract(MoveContract.class)
 public class MoveState implements ContractState {
-    private UniqueIdentifier linearId = UniqueIdentifier.Companion.fromString(UUID.randomUUID().toString());
+    private UniqueIdentifier gameId = UniqueIdentifier.Companion.fromString(UUID.randomUUID().toString());
     private String move;
     private AbstractParty player;
 
-    public MoveState(UniqueIdentifier linearId, String move, AbstractParty player) {
-        this.linearId = linearId;
+    public MoveState(UniqueIdentifier gameId, String move, AbstractParty player) {
+        this.gameId = gameId;
         this.move = move;
         this.player = player;
     }
 
     public MoveState pickMove(String move) {
         return new MoveState(
-                this.linearId,
+                this.gameId,
                 move,
                 this.player
         );
@@ -52,7 +52,7 @@ public class MoveState implements ContractState {
     public String getMove() { return move; }
 
     @NotNull
-    public UniqueIdentifier getLinearId() { return this.linearId; }
+    public UniqueIdentifier getGameId() { return this.gameId; }
 
     @NotNull
     @Override

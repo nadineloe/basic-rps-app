@@ -19,7 +19,7 @@ public class ExchangeMovesFlow {
     public static class Initiator extends FlowLogic<String> {
 
         private final UniqueIdentifier gameId;
-
+        private AbstractParty counterparty;
         public Initiator(UniqueIdentifier gameId) {
             this.gameId = gameId;
         }
@@ -32,7 +32,7 @@ public class ExchangeMovesFlow {
             GameState gameInput = (GameState) gameStateAndRef.getState().getData();
 
             List<AbstractParty> players = gameInput.getParticipants();
-            AbstractParty counterparty = players.stream().filter(it -> it != getOurIdentity()).collect(Collectors.toList()).get(0);
+            this.counterparty = players.stream().filter(player -> !player.equals(getOurIdentity())).collect(Collectors.toList()).get(0);
 
             FlowSession counterpartySession = initiateFlow(counterparty);
 
