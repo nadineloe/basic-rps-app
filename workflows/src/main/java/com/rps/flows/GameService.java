@@ -54,6 +54,14 @@ public class GameService extends SingletonSerializeAsToken {
             return myself;
         } else if (myMove.equals("SCISSOR") && counterpartyMove.equals("PAPER")) {
             return myself;
+        } else if (myMove.equals("PAPER") && counterpartyMove.equals("ROCK")) {
+            return myself;
+        } else if (myMove.equals("SCISSOR") && counterpartyMove.equals("ROCK")) {
+            return counterparty;
+        } else if (myMove.equals("PAPER") && counterpartyMove.equals("SCISSOR")) {
+            return counterparty;
+        } else if (myMove.equals("ROCK") && counterpartyMove.equals("PAPER")) {
+            return counterparty;
         } else {
             throw new FlowException("this didnt work");
         }
