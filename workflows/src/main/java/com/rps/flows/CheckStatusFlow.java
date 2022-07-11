@@ -44,9 +44,13 @@ public class CheckStatusFlow {
 
                 this.counterparty = players.stream().filter(player -> !player.equals(getOurIdentity())).collect(Collectors.toList()).get(0);
 
-                FlowSession session = initiateFlow(counterparty);
-                UntrustworthyData<Boolean> moveCheck = session.sendAndReceive(Boolean.class, gameId);
-                return moveCheck.unwrap(hasOtherPlayerGone -> hasOtherPlayerGone);
+                FlowSession counterpartySession = initiateFlow(counterparty);
+                try {
+                    UntrustworthyData<Boolean> moveCheck = counterpartySession.sendAndReceive(Boolean.class, gameId);
+                    return moveCheck.unwrap(hasOtherPlayerGone -> hasOtherPlayerGone);
+                } catch (Exception exception) {
+                    System.out.println(exception.getMessage());
+                }
             }
                 return false;
         }

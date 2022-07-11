@@ -39,7 +39,6 @@ public class ExchangeMovesFlow {
             try {
                 UntrustworthyData<StateAndRef> moveCheck = counterpartySession.sendAndReceive(StateAndRef.class, gameId);
                 StateAndRef<MoveState> counterpartyMoveStateAndRef = moveCheck.unwrap(stateAndRef -> {
-                    assert (stateAndRef.getClass().isInstance(StateAndRef.class));
                     // java type casting
                     if (stateAndRef instanceof StateAndRef) {
                         return (StateAndRef<MoveState>) stateAndRef;

@@ -1,5 +1,6 @@
 package com.rps.flows;
 
+import co.paralleluniverse.fibers.Suspendable;
 import com.rps.states.GameState;
 import com.rps.states.MoveState;
 import net.corda.core.contracts.StateAndRef;
@@ -47,6 +48,7 @@ public class GameService extends SingletonSerializeAsToken {
         return inputStateAndRef;
     }
 
+    @Suspendable
     public AbstractParty getWinner(String myMove, String counterpartyMove, AbstractParty counterparty, AbstractParty myself) throws FlowException {
         if (myMove.equals(counterpartyMove)) {
             throw new FlowException("Tie. Need another round to determine winner.");

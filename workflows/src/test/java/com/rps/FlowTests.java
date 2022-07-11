@@ -215,12 +215,12 @@ public class FlowTests {
          MoveState dataA = testStatesNodeA.getStates().get(0).getState().getData();
          MoveState dataB = testStatesNodeB.getStates().get(0).getState().getData();
 
-//         ExchangeMovesFlow.Initiator exchangeMoveFlow = new ExchangeMovesFlow.Initiator(gameId);
-//         Future<String> counterpartyMoveFuture = a.startFlow(exchangeMoveFlow);
-//         network.runNetwork();
-//         String counterpartyMove = counterpartyMoveFuture.get();
-//         System.out.println(counterpartyMove);
-//         assert counterpartyMove.equals(dataB.getMove());
+         ExchangeMovesFlow.Initiator exchangeMoveFlow = new ExchangeMovesFlow.Initiator(gameId);
+         Future<String> counterpartyMoveFuture = a.startFlow(exchangeMoveFlow);
+         network.runNetwork();
+         String counterpartyMove = counterpartyMoveFuture.get();
+         System.out.println(counterpartyMove);
+         assert counterpartyMove.equals(dataB.getMove());
      }
 
     @Test
@@ -244,9 +244,9 @@ public class FlowTests {
         assert testStatesNodeB.getStates().size() == 1;
         MoveState dataA = testStatesNodeA.getStates().get(0).getState().getData();
         MoveState dataB = testStatesNodeB.getStates().get(0).getState().getData();
-//        Future<AbstractParty> whoIsWinner = a.startFlow(new PickWinnerFlow.Initiator(gameId));
-//        System.out.println(whoIsWinner);
-//        AbstractParty winner = whoIsWinner.get();
-//        assert winner.equals(player2);
+        Future<AbstractParty> whoIsWinner = a.startFlow(new PickWinnerFlow.Initiator(gameId));
+        System.out.println(whoIsWinner);
+        AbstractParty winner = whoIsWinner.get();
+        assert winner.equals(player2);
     }
 }

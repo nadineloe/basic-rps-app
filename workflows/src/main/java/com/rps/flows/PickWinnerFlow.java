@@ -29,7 +29,8 @@ public class PickWinnerFlow {
         private static final ProgressTracker.Step RETRIEVING_STATES = new ProgressTracker.Step("Retrieving GameState and MoveState from vault");
         private static final ProgressTracker.Step CHECKSTATUS_FLOW = new ProgressTracker.Step("Running CheckStatus flow");
         private static final ProgressTracker.Step EXCHANGING_MOVES = new ProgressTracker.Step("Exchanging players moves");
-        private static final ProgressTracker.Step  CHECKING_WINNER = new ProgressTracker.Step("Checking who's winning");
+        private static final ProgressTracker.Step CHECKING_WINNER = new ProgressTracker.Step("Checking who's winning");
+        private static final ProgressTracker.Step TRANSACTION_BUILDER = new ProgressTracker.Step("Setting up transation builder");
         private static final ProgressTracker.Step SIGNING_TRANSACTION = new ProgressTracker.Step("Signing transaction with our private key.");
         private static final ProgressTracker.Step FINALISING_TRANSACTION = new ProgressTracker.Step("Recording transaction") {
             @Override
@@ -55,6 +56,7 @@ public class PickWinnerFlow {
         }
 
         private final UniqueIdentifier gameId;
+
         public Initiator(UniqueIdentifier gameId) {
             this.gameId = gameId;
         }
@@ -85,6 +87,8 @@ public class PickWinnerFlow {
 
                 progressTracker.setCurrentStep(CHECKING_WINNER);
                 AbstractParty winner = getServiceHub().cordaService(GameService.class).getWinner(myMove, counterpartyMove, counterparty, getOurIdentity());
+
+                progressTracker.setCurrentStep(TRANSACTION_BUILDER);
                 GameState gameOutput = new GameState(players, gameId, Arrays.asList(winner));
 
                 TransactionBuilder builder = Helpers.ourTx(getServiceHub())
